@@ -1,7 +1,6 @@
 # OpenMC Pebble Bed Project Dependencies 
 # Install OpenMC separately via conda: 
 # conda create -n openmc -c conda-forge openmc 
-python=3.13
 
 # Notebook & plotting 
 jupyter>=1.0.0 

@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+mode=${1:-smoke}
+root=/mnt/efs
+case "$mode" in
+  seed)
+    : "${DATA_S3_URI:?}" "${DATA_VERSION:?}"
+    [[ $DATA_VERSION =~ ^[A-Za-z0-9._-]+$ && $DATA_VERSION != .* ]]
+    mkdir -p "$root/data"
+    dest="$root/data/$DATA_VERSION"
+    [[ ! -e $dest ]] || { echo "Data version already exists" >&2; exit 1; }
+    stage=$(mktemp -d "$root/data/.stage.XXXXXXXX")
+    aws s3 sync "$DATA_S3_URI/" "$stage/" --only-show-errors
+    (cd "$stage" && sha256sum --check --strict SHA256SUMS && test -s lib80x_hdf5/cross_sections.xml && test -s chain.xml)
+    mv -T "$stage" "$dest"
+    exit 0 ;;
+  geometry|smoke|production) ;;
+  *) echo "Unknown mode: $mode" >&2; exit 2 ;;
+esac
+: "${RESULTS_S3_URI:?}" "${OPENMC_CHAIN_FILE:?}" "${OPENMC_CROSS_SECTIONS:?}"
+nodes=${AWS_BATCH_JOB_NUM_NODES:-1}
+index=${AWS_BATCH_JOB_NODE_INDEX:-0}
+main=${AWS_BATCH_JOB_MAIN_NODE_INDEX:-0}
+job=${AWS_BATCH_JOB_ID%%#*}
+if [[ $nodes != 1 ]]; then
+    job=${SHARED_RUN_ID:?All MPI nodes need the same run ID}
+    [[ $job =~ ^[A-Za-z0-9_-]+$ ]]
+fi
+attempt="$job/attempt-${AWS_BATCH_JOB_ATTEMPT:-1}"
+work="$root/runs/$attempt"
+run="$work/output"
+mkdir -p "$work"
+casefile=/app/cases/block-smoke.json
+[[ $mode != production ]] || casefile=/app/cases/block-production.json
+driver=(/opt/block/bin/python -m mpi4py /app/block_depletion.py --case "$casefile" --run-dir "$run")
+if [[ $mode == geometry ]]; then
+    [[ $nodes == 1 ]]
+    driver+=(--check-geometry)
+fi
+if [[ $nodes == 1 ]]; then
+    "${driver[@]}"
+else
+    # Each host keeps its SSH host secret locally; EFS carries the job-scoped MPI identity.
+    mesh="$work/mpi"
+    mkdir -p "$mesh" /root/.ssh /run/sshd
+    chmod 700 /root/.ssh
+    if [[ $index == "$main" ]]; then
+        ssh-keygen -q -t ed25519 -N '' -f "$mesh/identity"
+        touch "$mesh/identity.ready"
+    fi
+    deadline=$((SECONDS + 1200))
+    wait_file() {
+        until [[ -e $1 ]]; do
+            (( SECONDS < deadline )) || { echo "Timed out waiting for $1" >&2; exit 1; }
+            sleep 2
+        done
+    }
+    wait_file "$mesh/identity.ready"
+    install -m 600 "$mesh/identity" /root/.ssh/id_ed25519
+    install -m 600 "$mesh/identity.pub" /root/.ssh/authorized_keys
+    ssh-keygen -q -t ed25519 -N '' -f /run/sshd/job_host_key
+    /usr/sbin/sshd -h /run/sshd/job_host_key -o PermitRootLogin=prohibit-password -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o UsePAM=yes
+    ipaddr=$(ip -4 -o addr show scope global | awk 'NR==1 {split($4,a,"/"); print a[1]}')
+    [[ -n $ipaddr ]]
+    read -r kind pub _ < /run/sshd/job_host_key.pub
+    echo "$ipaddr $kind $pub" > "$mesh/$index.tmp"
+    mv "$mesh/$index.tmp" "$mesh/$index.host"
+    cat > /root/.ssh/config <<EOF
+Host *
+    BatchMode yes
+    StrictHostKeyChecking yes
+    UserKnownHostsFile $mesh/known_hosts
+EOF
+    if [[ $index != "$main" ]]; then
+        exec sleep infinity
+    fi
+    trap 'rm -f "$mesh/identity"' EXIT
+    for ((i=0; i<nodes; i++)); do wait_file "$mesh/$i.host"; done
+    cat "$mesh"/*.host > "$mesh/known_hosts"
+    awk '{print $1 " slots=1"}' "$mesh/known_hosts" > "$mesh/hostfile"
+    [[ $(sort -u "$mesh/hostfile" | wc -l) == "$nodes" ]]
+    # One rank owns each node. OpenMP binds its 16 threads to hardware threads.
+    export OMP_PLACES=threads OMP_PROC_BIND=spread
+    mpirun --allow-run-as-root --prefix /opt/block --hostfile "$mesh/hostfile" -np "$nodes" \
+      --map-by ppr:1:node --bind-to none --display-map --wdir /app \
+      -x OMP_NUM_THREADS -x OMP_PLACES -x OMP_PROC_BIND -x OPENBLAS_NUM_THREADS \
+      -x OPENMC_CROSS_SECTIONS -x OPENMC_CHAIN_FILE -x MPLBACKEND "${driver[@]}"
+fi
+if [[ $mode != geometry ]]; then
+    python /app/plot_block_results.py --run-dir "$run"
+fi
+aws s3 sync "$run/" "$RESULTS_S3_URI/$attempt/" --only-show-errors

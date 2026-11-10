@@ -1,0 +1,56 @@
+name: Publish or submit block depletion
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: Registered Batch definition to submit
+        type: choice
+        options: [seed, geometry, smoke, mpi-smoke, production]
+        required: true
+permissions:
+  contents: read
+  id-token: write
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+jobs:
+  publish:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+      - name: Build Linux image and report digest
+        env:
+          REPO: ${{ vars.ECR_URI }}
+        run: |
+          docker build --platform linux/amd64 -t "$REPO:$GITHUB_REF_NAME" .
+          docker push "$REPO:$GITHUB_REF_NAME"
+          docker inspect --format '{{index .RepoDigests 0}}' "$REPO:$GITHUB_REF_NAME" >> "$GITHUB_STEP_SUMMARY"
+  submit:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Submit registered revision
+        env:
+          QUEUE: ${{ vars.BATCH_QUEUE_ARN }}
+          DEFINITIONS: ${{ vars.BATCH_DEFINITIONS_JSON }}
+          STAGE: ${{ inputs.stage }}
+        run: |
+          definition=$(jq -er --arg name "$STAGE" '.[$name]' <<<"$DEFINITIONS")
+          [[ "$definition" =~ :[0-9]+$ ]]
+          args=()
+          if [[ "$STAGE" == mpi-smoke || "$STAGE" == production ]]; then
+            override=$(jq -nc --arg id "gha-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" '{nodePropertyOverrides:[{targetNodes:"0:",containerOverrides:{environment:[{name:"SHARED_RUN_ID",value:$id}]}}]}')
+            args+=(--node-overrides "$override")
+          fi
+          aws batch submit-job --job-name "block-$STAGE-$GITHUB_RUN_ID" --job-queue "$QUEUE" --job-definition "$definition" "${args[@]}" >> "$GITHUB_STEP_SUMMARY"

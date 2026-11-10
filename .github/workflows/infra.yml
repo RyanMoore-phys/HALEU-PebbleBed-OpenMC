@@ -1,0 +1,45 @@
+name: Block infrastructure
+on:
+  workflow_dispatch:
+    inputs:
+      stack:
+        type: choice
+        options: [core, campaign]
+        required: true
+      operation:
+        type: choice
+        options: [plan, apply, close-campaign]
+        required: true
+permissions:
+  contents: read
+  id-token: write
+concurrency: block-infrastructure
+jobs:
+  infra:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      TF_VAR_state_bucket: ${{ vars.STATE_BUCKET }}
+      TF_VAR_az: ${{ vars.BLOCK_AZ }}
+      STACK: ${{ inputs.stack }}
+      OPERATION: ${{ inputs.operation }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: '1.10.6'
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Manage selected stack
+        run: |
+          cd "infra/$STACK"
+          tofu init -backend-config="bucket=$TF_VAR_state_bucket" -backend-config="key=block/$STACK.tfstate" -backend-config="region=$AWS_REGION" -backend-config="use_lockfile=true"
+          tofu validate
+          case "$OPERATION" in
+            plan) tofu plan ;;
+            apply) tofu plan -out=apply.plan && tofu apply apply.plan && tofu output >> "$GITHUB_STEP_SUMMARY" ;;
+            close-campaign) [[ "$STACK" == campaign ]] && tofu destroy -auto-approve ;;
+          esac

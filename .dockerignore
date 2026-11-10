@@ -1,0 +1,10 @@
+**
+!Dockerfile
+!environment.yml
+!block_model.py
+!block_depletion.py
+!plot_block_results.py
+!cases/
+!cases/*.json
+!scripts/
+!scripts/*.sh

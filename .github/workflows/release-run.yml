@@ -35,6 +35,8 @@ jobs:
           docker push "$REPO:$GITHUB_REF_NAME"
           docker inspect --format '{{index .RepoDigests 0}}' "$REPO:$GITHUB_REF_NAME" >> "$GITHUB_STEP_SUMMARY"
   submit:
+    outputs:
+      job_id: ${{ steps.batch.outputs.job_id }}
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
@@ -47,6 +49,7 @@ jobs:
           role-to-assume: ${{ fromJSON(steps.deployment.outputs.config).oidc_role_arn }}
           aws-region: ${{ fromJSON(steps.deployment.outputs.config).region }}
       - name: Submit registered revision
+        id: batch
         env:
           QUEUE: ${{ fromJSON(steps.deployment.outputs.config).queue }}
           STAGE: ${{ inputs.stage }}
@@ -58,4 +61,48 @@ jobs:
             override=$(jq -nc --arg id "gha-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" '{nodePropertyOverrides:[{targetNodes:"0:",containerOverrides:{environment:[{name:"SHARED_RUN_ID",value:$id}]}}]}')
             args+=(--node-overrides "$override")
           fi
-          aws batch submit-job --job-name "block-$STAGE-$GITHUB_RUN_ID" --job-queue "$QUEUE" --job-definition "$definition" "${args[@]}" >> "$GITHUB_STEP_SUMMARY"
+          job_id=$(aws batch submit-job --job-name "block-$STAGE-$GITHUB_RUN_ID" --job-queue "$QUEUE" --job-definition "$definition" "${args[@]}" --query jobId --output text)
+          echo "job_id=$job_id" >> "$GITHUB_OUTPUT"
+          echo "Submitted Batch job \`$job_id\`" >> "$GITHUB_STEP_SUMMARY"
+  monitor_1:
+    name: Watch Batch (1/6)
+    needs: submit
+    uses: ./.github/workflows/watch-batch.yml
+    with:
+      job_id: ${{ needs.submit.outputs.job_id }}
+  monitor_2:
+    name: Watch Batch (2/6)
+    needs: [submit, monitor_1]
+    if: needs.monitor_1.outputs.pending == 'true'
+    uses: ./.github/workflows/watch-batch.yml
+    with:
+      job_id: ${{ needs.submit.outputs.job_id }}
+  monitor_3:
+    name: Watch Batch (3/6)
+    needs: [submit, monitor_2]
+    if: needs.monitor_2.outputs.pending == 'true'
+    uses: ./.github/workflows/watch-batch.yml
+    with:
+      job_id: ${{ needs.submit.outputs.job_id }}
+  monitor_4:
+    name: Watch Batch (4/6)
+    needs: [submit, monitor_3]
+    if: needs.monitor_3.outputs.pending == 'true'
+    uses: ./.github/workflows/watch-batch.yml
+    with:
+      job_id: ${{ needs.submit.outputs.job_id }}
+  monitor_5:
+    name: Watch Batch (5/6)
+    needs: [submit, monitor_4]
+    if: needs.monitor_4.outputs.pending == 'true'
+    uses: ./.github/workflows/watch-batch.yml
+    with:
+      job_id: ${{ needs.submit.outputs.job_id }}
+  monitor_6:
+    name: Watch Batch (6/6)
+    needs: [submit, monitor_5]
+    if: needs.monitor_5.outputs.pending == 'true'
+    uses: ./.github/workflows/watch-batch.yml
+    with:
+      job_id: ${{ needs.submit.outputs.job_id }}
+      final_window: true

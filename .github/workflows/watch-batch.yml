@@ -1,0 +1,65 @@
+name: Watch a submitted Batch job
+on:
+  workflow_call:
+    inputs:
+      job_id:
+        type: string
+        required: true
+      final_window:
+        type: boolean
+        default: false
+    outputs:
+      pending:
+        value: ${{ jobs.watch.outputs.pending }}
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 315
+    outputs:
+      pending: ${{ steps.watch.outputs.pending }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for AWS Batch
+        id: watch
+        env:
+          JOB_ID: ${{ inputs.job_id }}
+          FINAL_WINDOW: ${{ inputs.final_window }}
+        run: |
+          export AWS_REGION=$(jq -er .region infra/deployment.json)
+          export AWS_ROLE_ARN=$(jq -er .oidc_role_arn infra/deployment.json)
+          export AWS_WEB_IDENTITY_TOKEN_FILE="$RUNNER_TEMP/batch-monitor.jwt"
+          umask 077
+          trap 'rm -f "$AWS_WEB_IDENTITY_TOKEN_FILE"' EXIT
+          previous=''
+          deadline=$((SECONDS + 18000))
+          while (( SECONDS < deadline )); do
+            # Use a current GitHub OIDC token even during multi-hour runs.
+            if [[ ! -s $AWS_WEB_IDENTITY_TOKEN_FILE ]] || (( SECONDS >= refresh_at )); then
+              curl --fail --silent --show-error --retry 3 \
+                -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+                "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" |
+                jq -er .value > "$AWS_WEB_IDENTITY_TOKEN_FILE"
+              refresh_at=$((SECONDS + 180))
+            fi
+            job=$(aws batch describe-jobs --jobs "$JOB_ID" --query 'jobs[0]' --output json)
+            status=$(jq -er .status <<< "$job")
+            if [[ $status != "$previous" ]]; then
+              echo "$JOB_ID: $status"
+              previous=$status
+            fi
+            case "$status" in
+              SUCCEEDED|FAILED)
+                jq -r '"Batch job `\(.jobId)` **\(.status)**", (.statusReason // empty), (.container.reason // empty), (.container.logStreamName // empty)' <<< "$job" | tee -a "$GITHUB_STEP_SUMMARY"
+                [[ $status == SUCCEEDED ]] || exit 1
+                exit 0 ;;
+            esac
+            sleep 60
+          done
+          if [[ $FINAL_WINDOW == true ]]; then
+            echo "::error::Monitoring timed out. Check Batch job $JOB_ID before submitting again."
+            exit 1
+          fi
+          echo 'pending=true' >> "$GITHUB_OUTPUT"

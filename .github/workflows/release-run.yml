@@ -12,22 +12,24 @@ on:
 permissions:
   contents: read
   id-token: write
-env:
-  AWS_REGION: ${{ vars.AWS_REGION }}
 jobs:
   publish:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Read deployment configuration
+        id: deployment
+        run: echo "config=$(jq -ce . infra/deployment.json)" >> "$GITHUB_OUTPUT"
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ fromJSON(steps.deployment.outputs.config).oidc_role_arn }}
+          aws-region: ${{ fromJSON(steps.deployment.outputs.config).region }}
       - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr
       - name: Build Linux image and report digest
         env:
-          REPO: ${{ vars.ECR_URI }}
+          REPO: ${{ steps.ecr.outputs.registry }}/block-depletion
         run: |
           docker build --platform linux/amd64 -t "$REPO:$GITHUB_REF_NAME" .
           docker push "$REPO:$GITHUB_REF_NAME"
@@ -36,17 +38,20 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - name: Read deployment configuration
+        id: deployment
+        run: echo "config=$(jq -ce . infra/deployment.json)" >> "$GITHUB_OUTPUT"
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ fromJSON(steps.deployment.outputs.config).oidc_role_arn }}
+          aws-region: ${{ fromJSON(steps.deployment.outputs.config).region }}
       - name: Submit registered revision
         env:
-          QUEUE: ${{ vars.BATCH_QUEUE_ARN }}
-          DEFINITIONS: ${{ vars.BATCH_DEFINITIONS_JSON }}
+          QUEUE: ${{ fromJSON(steps.deployment.outputs.config).queue }}
           STAGE: ${{ inputs.stage }}
         run: |
-          definition=$(jq -er --arg name "$STAGE" '.[$name]' <<<"$DEFINITIONS")
+          definition=$(jq -er --arg name "$STAGE" '.definitions[$name]' infra/deployment.json)
           [[ "$definition" =~ :[0-9]+$ ]]
           args=()
           if [[ "$STAGE" == mpi-smoke || "$STAGE" == production ]]; then

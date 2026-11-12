@@ -19,21 +19,24 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
-      AWS_REGION: ${{ vars.AWS_REGION }}
-      TF_VAR_state_bucket: ${{ vars.STATE_BUCKET }}
-      TF_VAR_az: ${{ vars.BLOCK_AZ }}
       STACK: ${{ inputs.stack }}
       OPERATION: ${{ inputs.operation }}
     steps:
       - uses: actions/checkout@v4
+      - name: Read deployment configuration
+        id: deployment
+        run: echo "config=$(jq -ce . infra/deployment.json)" >> "$GITHUB_OUTPUT"
       - uses: opentofu/setup-opentofu@v1
         with:
           tofu_version: '1.10.6'
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ fromJSON(steps.deployment.outputs.config).oidc_role_arn }}
+          aws-region: ${{ fromJSON(steps.deployment.outputs.config).region }}
       - name: Manage selected stack
+        env:
+          TF_VAR_state_bucket: ${{ fromJSON(steps.deployment.outputs.config).state_bucket }}
+          TF_VAR_az: ${{ fromJSON(steps.deployment.outputs.config).availability_zone }}
         run: |
           cd "infra/$STACK"
           tofu init -backend-config="bucket=$TF_VAR_state_bucket" -backend-config="key=block/$STACK.tfstate" -backend-config="region=$AWS_REGION" -backend-config="use_lockfile=true"

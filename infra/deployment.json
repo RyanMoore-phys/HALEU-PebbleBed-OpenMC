@@ -5,10 +5,10 @@
   "oidc_role_arn": "arn:aws:iam::591859078128:role/GithubOIDC",
   "queue": "block-queue",
   "definitions": {
-    "seed": null,
-    "geometry": null,
-    "smoke": null,
-    "mpi-smoke": null,
-    "production": null
+    "seed": "arn:aws:batch:us-east-2:591859078128:job-definition/block-seed:1",
+    "geometry": "arn:aws:batch:us-east-2:591859078128:job-definition/block-geometry:1",
+    "smoke": "arn:aws:batch:us-east-2:591859078128:job-definition/block-smoke:1",
+    "mpi-smoke": "arn:aws:batch:us-east-2:591859078128:job-definition/block-mpi-smoke:1",
+    "production": "arn:aws:batch:us-east-2:591859078128:job-definition/block-production:1"
   }
 }

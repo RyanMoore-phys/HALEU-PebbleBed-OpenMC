@@ -6,10 +6,11 @@ set -euo pipefail
 [[ $IMAGE_URI =~ @sha256:[[:xdigit:]]{64}$ ]]
 export IMAGE_URI JOB_ROLE_ARN EFS_ID ACCESS_POINT_ID DATA_S3_URI DATA_VERSION RESULTS_S3_URI AWS_REGION
 defs='{}'
-for stage in seed geometry smoke mpi-smoke production; do
+for stage in seed geometry smoke mpi-check mpi-smoke production; do
     nodes=1
     mode=$stage
     case "$stage" in
+        mpi-check) nodes=2 ;;
         mpi-smoke) nodes=2; mode=smoke ;;
         production) nodes=8 ;;
     esac
@@ -30,7 +31,7 @@ for stage in seed geometry smoke mpi-smoke production; do
           "awslogs-region":env.AWS_REGION,"awslogs-stream-prefix":"block"}}
       };
       {jobDefinitionName:("block-"+$stage),retryStrategy:{attempts:1},
-       timeout:{attemptDurationSeconds:(if $stage=="production" then 86400 else 7200 end)}}
+       timeout:{attemptDurationSeconds:(if $stage=="production" then 86400 elif $stage=="mpi-check" then 600 else 7200 end)}}
       + if $nodes==1 then {type:"container",containerProperties:container}
         else {type:"multinode",nodeProperties:{numNodes:$nodes,mainNode:0,
               nodeRangeProperties:[{targetNodes:"0:",container:container}]}} end')

@@ -15,7 +15,7 @@ case "$mode" in
     (cd "$stage" && sha256sum --check --strict SHA256SUMS && test -s lib80x_hdf5/cross_sections.xml && test -s chain.xml)
     mv -T "$stage" "$dest"
     exit 0 ;;
-  geometry|smoke|production) ;;
+  geometry|smoke|mpi-check|production) ;;
   *) echo "Unknown mode: $mode" >&2; exit 2 ;;
 esac
 : "${RESULTS_S3_URI:?}" "${OPENMC_CHAIN_FILE:?}" "${OPENMC_CROSS_SECTIONS:?}"
@@ -36,6 +36,12 @@ mkdir -p "$work"
 casefile=/app/cases/block-smoke.json
 [[ $mode != production ]] || casefile=/app/cases/block-production.json
 driver=(/opt/block/bin/python -m mpi4py /app/block_depletion.py --case "$casefile" --run-dir "$run")
+launcher=()
+if [[ $mode == mpi-check ]]; then
+    [[ $nodes == 2 ]] || { echo "mpi-check requires two nodes" >&2; exit 1; }
+    driver=(/opt/block/bin/python -u -m mpi4py /app/scripts/mpi-check.py)
+    launcher=(timeout --kill-after=10s 120s)
+fi
 if [[ $mode == geometry ]]; then
     [[ $nodes == 1 ]]
     driver+=(--check-geometry)
@@ -101,10 +107,13 @@ EOF
     fi
     # One rank owns each node. OpenMP binds its 16 threads to hardware threads.
     export OMP_PLACES=threads OMP_PROC_BIND=spread
-    mpirun --allow-run-as-root --prefix /opt/block --hostfile "$mesh/hostfile" -np "$nodes" \
+    "${launcher[@]}" mpirun --allow-run-as-root --prefix /opt/block --hostfile "$mesh/hostfile" -np "$nodes" \
       --map-by ppr:1:node --bind-to none --display-map --wdir /app \
       -x OMP_NUM_THREADS -x OMP_PLACES -x OMP_PROC_BIND -x OPENBLAS_NUM_THREADS \
       -x OPENMC_CROSS_SECTIONS -x OPENMC_CHAIN_FILE -x MPLBACKEND "${driver[@]}"
+fi
+if [[ $mode == mpi-check ]]; then
+    exit 0
 fi
 if [[ $mode != geometry ]]; then
     python /app/plot_block_results.py --run-dir "$run"

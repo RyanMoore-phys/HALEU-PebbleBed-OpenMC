@@ -8,3 +8,4 @@
 !cases/*.json
 !scripts/
 !scripts/*.sh
+!scripts/mpi-check.py

@@ -53,6 +53,14 @@ jobs:
             case "$status" in
               SUCCEEDED|FAILED)
                 jq -r '"Batch job `\(.jobId)` **\(.status)**", (.statusReason // empty), (.container.reason // empty), (.container.logStreamName // empty)' <<< "$job" | tee -a "$GITHUB_STEP_SUMMARY"
+                if [[ $status == FAILED ]] && jq -e '.nodeProperties.numNodes > 1' <<< "$job" >/dev/null; then
+                  nodes=$(jq -r '.nodeProperties.numNodes' <<< "$job")
+                  node_ids=()
+                  for ((i=0; i<nodes; i++)); do node_ids+=("$JOB_ID#$i"); done
+                  aws batch describe-jobs --jobs "${node_ids[@]}" --output json |
+                    jq -r '.jobs[] | "Node \(.nodeDetails.nodeIndex): \(.status), exit \(.container.exitCode), log \(.container.logStreamName // "unavailable")"' |
+                    tee -a "$GITHUB_STEP_SUMMARY"
+                fi
                 [[ $status == SUCCEEDED ]] || exit 1
                 exit 0 ;;
             esac

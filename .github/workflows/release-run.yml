@@ -9,6 +9,10 @@ on:
         type: choice
         options: [seed, geometry, smoke, mpi-check, mpi-smoke, production]
         required: true
+      job_definition_arn:
+        description: Exact revision ARN from registration (blank uses deployment.json)
+        type: string
+        required: false
 permissions:
   contents: read
   id-token: write
@@ -53,10 +57,18 @@ jobs:
         env:
           QUEUE: ${{ fromJSON(steps.deployment.outputs.config).queue }}
           STAGE: ${{ inputs.stage }}
+          DEFINITION_OVERRIDE: ${{ inputs.job_definition_arn }}
         run: |
-          definition=$(jq -r --arg name "$STAGE" '.definitions[$name] // ""' infra/deployment.json)
-          if [[ ! "$definition" =~ :[0-9]+$ ]]; then
-            echo "::error::Register block-$STAGE and pin its revision ARN under definitions.$STAGE in infra/deployment.json on main."
+          definition=$DEFINITION_OVERRIDE
+          if [[ -z "$definition" ]]; then
+            definition=$(jq -r --arg name "$STAGE" '.definitions[$name] // ""' infra/deployment.json)
+          fi
+          region=$(jq -er .region infra/deployment.json)
+          account=$(jq -er '.oidc_role_arn | split(":")[4]' infra/deployment.json)
+          prefix="arn:aws:batch:$region:$account:job-definition/block-$STAGE:"
+          revision=${definition#"$prefix"}
+          if [[ "$definition" != "$prefix"* || ! "$revision" =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::Supply an exact block-$STAGE revision ARN in this account/region, or pin it in deployment.json."
             exit 1
           fi
           args=()
@@ -67,6 +79,7 @@ jobs:
           job_id=$(aws batch submit-job --job-name "block-$STAGE-$GITHUB_RUN_ID" --job-queue "$QUEUE" --job-definition "$definition" "${args[@]}" --query jobId --output text)
           echo "job_id=$job_id" >> "$GITHUB_OUTPUT"
           echo "Submitted Batch job \`$job_id\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Definition: \`$definition\`" >> "$GITHUB_STEP_SUMMARY"
   monitor_1:
     name: Watch Batch (1/6)
     needs: submit

@@ -74,6 +74,31 @@ In GitHub Actions → **Publish or submit block depletion → Run workflow**, se
 
 ## Phase 8 — Submit and collect results
 
+### Shorter release cycle (no GitHub IAM permissions)
+
+For releases containing `scripts/register-release.sh`, this replaces manual environment exports and committing new definition ARNs. Keep resource identifiers in `infra/registration.json`; its `data_version` intentionally matches the existing EFS directory `enfdb80-v1`, while the S3 prefix is `endfb80-v1`.
+
+1. Commit changes to main and push a new version tag. Wait for the tag-triggered publish job to succeed. Publishing alone does not submit a simulation.
+2. In administrator CloudShell, clone the repository once:
+
+   ```bash
+   git clone https://github.com/RyanMoore-phys/HALEU-PebbleBed-OpenMC.git
+   ```
+
+3. For each release, check out that exact tag and register it (replace `v0.1.4` with the release you published):
+
+   ```bash
+   cd ~/HALEU-PebbleBed-OpenMC
+   git fetch origin --tags
+   git checkout --detach v0.1.4
+   bash scripts/register-release.sh v0.1.4
+   ```
+
+   The helper reads checked-in configuration, obtains the tag's ECR digest, and registers all six definitions. No environment exports are needed and no Batch job is submitted. An unpublished image or wrong checkout stops registration. Keep the printed ARNs as your release record.
+4. Open **Run workflow** on main, select the stage, and paste its returned ARN into **job_definition_arn**. No ARN commit is needed. The workflow checks that the ARN matches the chosen stage, account and region, and records it in the run summary. Leaving this input blank retains the older `deployment.json` behavior; it does not automatically select the newest revision.
+
+GitHub still does not register definitions. Moving registration into GitHub would require `batch:RegisterJobDefinition` and `iam:PassRole` for the existing job role. This procedure preserves the no-IAM-permissions constraint on GithubOIDC.
+
 Use the same workflow and choose a stage. A tag publishes an image; manual dispatch submits the registered job. The workflow polls the submitted ID with batch:DescribeJobs and stays in progress through queueing and execution. A Batch failure fails the workflow. Monitoring uses GitHub runner minutes, hands off every five hours, and fails after thirty hours without a terminal result. Cancelling monitoring leaves the AWS job running. The Batch launcher coordinates MPI over private IPs, waits for peer readiness and runs the driver on EFS. Each attempt writes a new output directory. Successful runs upload to the configured results prefix. For MPI runs the prefix includes gha-<workflow-run-id>-<workflow-attempt>/attempt-1. Single-node runs use the Batch job ID. Failed runs retain CloudWatch logs and files already written to EFS. A fresh submission starts a new history. [Batch MNP lifecycle](https://docs.aws.amazon.com/batch/latest/userguide/job-lifecycle.html)
 
 ## Phase 9 — Verify on AWS and scale up

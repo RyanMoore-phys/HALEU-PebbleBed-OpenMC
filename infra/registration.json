@@ -1,0 +1,9 @@
+{
+  "repository": "block-depletion",
+  "job_role_arn": "arn:aws:iam::591859078128:role/BlockDepletionJobRole",
+  "efs_id": "fs-0153af0790e19e5e8",
+  "access_point_id": "fsap-0d106d6651f1d5d84",
+  "data_s3_uri": "s3://openmc-block-data-20261112214420465700000003/endfb80-v1",
+  "data_version": "enfdb80-v1",
+  "results_s3_uri": "s3://openmc-block-results-20261112214420463500000002/runs"
+}

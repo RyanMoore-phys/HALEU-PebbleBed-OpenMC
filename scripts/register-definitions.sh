@@ -3,7 +3,10 @@
 set -euo pipefail
 : "${IMAGE_URI:?Use ECR URI with digest}" "${JOB_ROLE_ARN:?}" "${AWS_REGION:?}"
 : "${EFS_ID:?}" "${ACCESS_POINT_ID:?}" "${DATA_S3_URI:?}" "${DATA_VERSION:?}" "${RESULTS_S3_URI:?}"
-[[ $IMAGE_URI =~ @sha256:[[:xdigit:]]{64}$ ]]
+[[ $IMAGE_URI =~ ^[[:digit:]]{12}\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com/[a-z0-9/._-]+@sha256:[[:xdigit:]]{64}$ ]] || {
+    echo "IMAGE_URI must be a full ECR digest URI with a 12-digit account ID" >&2
+    exit 1
+}
 export IMAGE_URI JOB_ROLE_ARN EFS_ID ACCESS_POINT_ID DATA_S3_URI DATA_VERSION RESULTS_S3_URI AWS_REGION
 defs='{}'
 for stage in seed geometry smoke mpi-check mpi-smoke production; do

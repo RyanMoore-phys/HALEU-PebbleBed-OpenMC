@@ -1,0 +1,32 @@
+{
+  "benchmark": "OECD-NEA-MHTGR350-PhaseIII-1a-2a",
+  "particles": 50000,
+  "batches": 250,
+  "inactive": 100,
+  "transport_seed": 19,
+  "packing_seed": 7861,
+  "slice_height_cm": 1.0,
+  "nuclear_data_label": "ENDF/B-VIII.0 (user supplied; exploratory library comparison)",
+  "max_k_sigma_pcm": 50,
+  "max_abs_delta_k_pcm": 500,
+  "max_step_MWd_kgHM": 1.0,
+  "exercise": "2a",
+  "mode": "depletion",
+  "temperature_K": 1200.0,
+  "report_burnup_MWd_kgHM": [
+    0,
+    0.5,
+    5,
+    10,
+    20,
+    30,
+    40,
+    50,
+    60,
+    70,
+    80,
+    90,
+    100,
+    120
+  ]
+}

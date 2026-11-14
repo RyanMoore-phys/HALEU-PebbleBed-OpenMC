@@ -1,0 +1,119 @@
+{
+  "id": "OECD-NEA-MHTGR350-PhaseIII-1a-2a",
+  "specification_url": "https://www.oecd-nea.org/upload/docs/application/pdf/2021-11/mhtgr-350-vol_iii-benchmark_lattice.r0.pdf",
+  "specification_sha256": "48300a4fc85e8798e819b05b3621c13144b40735229db59dcfd028af115d0d01",
+  "dimensions": {
+    "block_flat_to_flat_cm": 36.0,
+    "supercell_flat_to_flat_cm": 108.0,
+    "pitch_cm": 1.88,
+    "compact_radius_cm": 0.6225,
+    "gap_radius_cm": 0.635,
+    "large_coolant_radius_cm": 0.794,
+    "small_coolant_radius_cm": 0.635,
+    "triso_radii_cm": [
+      0.02125,
+      0.03125,
+      0.03475,
+      0.03825,
+      0.04225
+    ],
+    "packing_fraction": 0.35
+  },
+  "specific_power_W_gHM": 100.0,
+  "burnup_MWd_kgHM": [
+    0,
+    0.5,
+    5,
+    10,
+    20,
+    30,
+    40,
+    50,
+    60,
+    70,
+    80,
+    90,
+    100,
+    120
+  ],
+  "number_densities_atom_b_cm": {
+    "kernel": {
+      "U235": 0.0037,
+      "U238": 0.0199,
+      "O16": 0.0355,
+      "C_nat": 0.0118
+    },
+    "buffer": {
+      "C_graph": 0.0502
+    },
+    "ipyc": {
+      "C_graph": 0.0953
+    },
+    "sic": {
+      "Si28": 0.0443,
+      "Si29": 0.00225,
+      "Si30": 0.00149,
+      "C_nat": 0.0481
+    },
+    "opyc": {
+      "C_graph": 0.0953
+    },
+    "matrix": {
+      "C_graph": 0.0827
+    },
+    "graphite": {
+      "C_graph": 0.0928
+    },
+    "helium": {
+      "He4": 2.46e-05
+    },
+    "reflector": {
+      "C_graph": 0.0863,
+      "B10": 2.76e-08
+    },
+    "burned": {
+      "U234": 4.92e-10,
+      "U235": 1.83e-05,
+      "U236": 3.3e-06,
+      "U238": 0.000178,
+      "Np237": 2.49e-07,
+      "Np239": 5.33e-08,
+      "Pu238": 4.97e-08,
+      "Pu239": 3.51e-06,
+      "Pu240": 5.96e-07,
+      "Pu241": 6.42e-07,
+      "Pu242": 9.34e-08,
+      "Am241": 1.83e-08,
+      "Am243": 1.31e-08,
+      "Cm242": 3.21e-09,
+      "Cm243": 5.01e-11,
+      "Cm244": 2.53e-09,
+      "Cm245": 1.38e-10,
+      "Cm246": 4.12e-12,
+      "Kr83": 3.36e-08,
+      "Sr90": 7.82e-07,
+      "Mo95": 8.02e-07,
+      "Tc99": 8.82e-07,
+      "Rh103": 4.34e-07,
+      "Rh105": 9.75e-10,
+      "Pd107": 1.26e-07,
+      "Xe131": 3.68e-07,
+      "Xe135": 3.03e-10,
+      "Cs133": 9.56e-07,
+      "Nd143": 7.65e-07,
+      "Nd145": 5.52e-07,
+      "Pm147": 1.58e-07,
+      "Sm149": 3.77e-09,
+      "Sm151": 1.63e-08,
+      "Sm152": 6.93e-08,
+      "Eu153": 6.97e-08,
+      "Eu154": 1.47e-08,
+      "Eu155": 3.82e-09,
+      "O16": 0.000306,
+      "C_graph": 0.069,
+      "Si28": 0.000507,
+      "Si29": 2.57e-05,
+      "Si30": 1.7e-05
+    }
+  }
+}

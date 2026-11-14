@@ -8,5 +8,6 @@ WORKDIR /app
 COPY block_model.py block_depletion.py plot_block_results.py ./
 COPY cases/ cases/
 COPY scripts/ scripts/
+COPY benchmarks/ benchmarks/
 ENTRYPOINT ["bash","/app/scripts/batch-entrypoint.sh"]
 CMD ["smoke"]

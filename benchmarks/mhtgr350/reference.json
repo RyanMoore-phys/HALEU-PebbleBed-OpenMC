@@ -1,0 +1,145 @@
+{
+  "report": "NEA/NSC/R(2019)6, corrected 16 October 2020",
+  "url": "https://www.oecd-nea.org/upload/docs/application/pdf/2021-11/nea_nsc_r_2019_6_cancel_and_replace_16_oct_2020_2020-10-16_15-07-51_660.pdf",
+  "sha256": "70306bd7fa706ac7d288ce6b1419f7540be1877926d08e8ab3852c5f6ea54cb7",
+  "note": "Inter-code population SD is not a measurement uncertainty or acceptance tolerance. Values transcribed from Tables 4 and 11; k dimensionless, SD in 1e-5 delta-k units.",
+  "1a": [
+    {
+      "burnup": 0,
+      "HELIOS": 1.23622,
+      "DeCART": 1.23686,
+      "McCARD": 1.23519,
+      "SERPENT": 1.23571,
+      "mean": 1.236,
+      "sd_pcm": 61.81
+    }
+  ],
+  "2a": [
+    {
+      "burnup": 0.0,
+      "HELIOS": 1.18103,
+      "DeCART": 1.1839,
+      "McCARD": 1.18119,
+      "SERPENT": 1.18103,
+      "mean": 1.1818,
+      "sd_pcm": 123.9
+    },
+    {
+      "burnup": 0.5,
+      "HELIOS": 1.17046,
+      "DeCART": 1.1712,
+      "McCARD": 1.16782,
+      "SERPENT": 1.16693,
+      "mean": 1.1691,
+      "sd_pcm": 177.5
+    },
+    {
+      "burnup": 5.0,
+      "HELIOS": 1.16345,
+      "DeCART": 1.16412,
+      "McCARD": 1.16123,
+      "SERPENT": 1.15981,
+      "mean": 1.16215,
+      "sd_pcm": 172.4
+    },
+    {
+      "burnup": 10.0,
+      "HELIOS": 1.15743,
+      "DeCART": 1.15824,
+      "McCARD": 1.15518,
+      "SERPENT": 1.15392,
+      "mean": 1.15619,
+      "sd_pcm": 172.6
+    },
+    {
+      "burnup": 20.0,
+      "HELIOS": 1.14504,
+      "DeCART": 1.1461,
+      "McCARD": 1.14273,
+      "SERPENT": 1.14179,
+      "mean": 1.14392,
+      "sd_pcm": 172.9
+    },
+    {
+      "burnup": 30.0,
+      "HELIOS": 1.1329,
+      "DeCART": 1.13408,
+      "McCARD": 1.1307,
+      "SERPENT": 1.12975,
+      "mean": 1.13186,
+      "sd_pcm": 171.8
+    },
+    {
+      "burnup": 40.0,
+      "HELIOS": 1.1212,
+      "DeCART": 1.12259,
+      "McCARD": 1.11925,
+      "SERPENT": 1.11824,
+      "mean": 1.12032,
+      "sd_pcm": 168.8
+    },
+    {
+      "burnup": 50.0,
+      "HELIOS": 1.10999,
+      "DeCART": 1.1117,
+      "McCARD": 1.10849,
+      "SERPENT": 1.10746,
+      "mean": 1.10941,
+      "sd_pcm": 159.9
+    },
+    {
+      "burnup": 60.0,
+      "HELIOS": 1.09935,
+      "DeCART": 1.10137,
+      "McCARD": 1.0978,
+      "SERPENT": 1.09714,
+      "mean": 1.09892,
+      "sd_pcm": 162.9
+    },
+    {
+      "burnup": 70.0,
+      "HELIOS": 1.0892,
+      "DeCART": 1.09156,
+      "McCARD": 1.08742,
+      "SERPENT": 1.08728,
+      "mean": 1.08887,
+      "sd_pcm": 173.0
+    },
+    {
+      "burnup": 80.0,
+      "HELIOS": 1.07949,
+      "DeCART": 1.08221,
+      "McCARD": 1.07839,
+      "SERPENT": 1.07792,
+      "mean": 1.0795,
+      "sd_pcm": 166.4
+    },
+    {
+      "burnup": 90.0,
+      "HELIOS": 1.07021,
+      "DeCART": 1.0733,
+      "McCARD": 1.06949,
+      "SERPENT": 1.06893,
+      "mean": 1.07048,
+      "sd_pcm": 168.9
+    },
+    {
+      "burnup": 100.0,
+      "HELIOS": 1.06135,
+      "DeCART": 1.06482,
+      "McCARD": 1.06089,
+      "SERPENT": 1.06047,
+      "mean": 1.06188,
+      "sd_pcm": 172.4
+    },
+    {
+      "burnup": 120.0,
+      "HELIOS": 1.04508,
+      "DeCART": 1.04963,
+      "McCARD": 1.0465,
+      "SERPENT": 1.04467,
+      "mean": 1.04647,
+      "sd_pcm": 194.7
+    }
+  ]
+}

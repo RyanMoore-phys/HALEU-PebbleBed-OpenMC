@@ -9,3 +9,5 @@
 !scripts/
 !scripts/*.sh
 !scripts/mpi-check.py
+!benchmarks/
+!benchmarks/**

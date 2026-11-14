@@ -74,6 +74,12 @@ In GitHub Actions → **Publish or submit block depletion → Run workflow**, se
 
 ## Phase 8 — Submit and collect results
 
+**MHTGR benchmark extension:** use [the benchmark run guide](benchmarks/mhtgr350/README.md)
+for the new `mhtgr-geometry`, `mhtgr-cold`, `mhtgr-pilot` and `mhtgr-depletion` stages.
+The original stages below remain illustrative infrastructure checks and are not
+compared against MHTGR reference values. The benchmark guide replaces the old
+production sequence for the benchmark study and explains its acceptance limits.
+
 ### Shorter release cycle (no GitHub IAM permissions)
 
 For releases containing `scripts/register-release.sh`, this replaces manual environment exports and committing new definition ARNs. Keep resource identifiers in `infra/registration.json`; its `data_version` intentionally matches the existing EFS directory `enfdb80-v1`, while the S3 prefix is `endfb80-v1`.

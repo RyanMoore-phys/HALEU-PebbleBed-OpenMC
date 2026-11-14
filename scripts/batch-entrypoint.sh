@@ -15,7 +15,7 @@ case "$mode" in
     (cd "$stage" && sha256sum --check --strict SHA256SUMS && test -s lib80x_hdf5/cross_sections.xml && test -s chain.xml)
     mv -T "$stage" "$dest"
     exit 0 ;;
-  geometry|smoke|mpi-check|production) ;;
+  geometry|smoke|mpi-check|production|mhtgr-geometry|mhtgr-cold|mhtgr-pilot|mhtgr-depletion) ;;
   *) echo "Unknown mode: $mode" >&2; exit 2 ;;
 esac
 : "${RESULTS_S3_URI:?}" "${OPENMC_CHAIN_FILE:?}" "${OPENMC_CROSS_SECTIONS:?}"
@@ -36,6 +36,9 @@ mkdir -p "$work"
 casefile=/app/cases/block-smoke.json
 [[ $mode != production ]] || casefile=/app/cases/block-production.json
 driver=(/opt/block/bin/python -m mpi4py /app/block_depletion.py --case "$casefile" --run-dir "$run")
+if [[ $mode == mhtgr-* ]]; then
+    driver=(/opt/block/bin/python -u -m mpi4py -m benchmarks.mhtgr350.run --case "/app/cases/$mode.json" --run-dir "$run")
+fi
 launcher=()
 if [[ $mode == mpi-check ]]; then
     [[ $nodes == 2 ]] || { echo "mpi-check requires two nodes" >&2; exit 1; }
@@ -122,6 +125,16 @@ EOF
 fi
 if [[ $mode == mpi-check ]]; then
     exit 0
+fi
+if [[ $mode == mhtgr-* ]]; then
+    comparison_status=0
+    if [[ $mode != mhtgr-geometry ]]; then
+        python -m benchmarks.mhtgr350.compare --run-dir "$run" || comparison_status=$?
+    fi
+    # Preserve the report even when the numerical comparison fails its screening limits.
+    aws s3 sync "$run/" "$RESULTS_S3_URI/$attempt/" --only-show-errors
+    echo "Benchmark outputs: $RESULTS_S3_URI/$attempt/"
+    exit "$comparison_status"
 fi
 if [[ $mode != geometry ]]; then
     python /app/plot_block_results.py --run-dir "$run"

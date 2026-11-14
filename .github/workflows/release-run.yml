@@ -7,7 +7,7 @@ on:
       stage:
         description: Registered Batch definition to submit
         type: choice
-        options: [seed, geometry, smoke, mpi-check, mpi-smoke, production]
+        options: [seed, geometry, smoke, mpi-check, mpi-smoke, production, mhtgr-geometry, mhtgr-cold, mhtgr-pilot, mhtgr-depletion]
         required: true
       job_definition_arn:
         description: Exact revision ARN from registration (blank uses deployment.json)
@@ -17,7 +17,17 @@ permissions:
   contents: read
   id-token: write
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check benchmark contracts without running transport
+        run: |
+          python3 -m unittest discover -s tests -v
+          python3 -m compileall -q benchmarks
+          bash -n scripts/batch-entrypoint.sh scripts/register-definitions.sh scripts/register-release.sh
   publish:
+    needs: validate
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -39,6 +49,7 @@ jobs:
           docker push "$REPO:$GITHUB_REF_NAME"
           docker inspect --format '{{index .RepoDigests 0}}' "$REPO:$GITHUB_REF_NAME" >> "$GITHUB_STEP_SUMMARY"
   submit:
+    needs: validate
     outputs:
       job_id: ${{ steps.batch.outputs.job_id }}
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
@@ -72,7 +83,7 @@ jobs:
             exit 1
           fi
           args=()
-          if [[ "$STAGE" == mpi-check || "$STAGE" == mpi-smoke || "$STAGE" == production ]]; then
+          if [[ "$STAGE" == mpi-check || "$STAGE" == mpi-smoke || "$STAGE" == production || "$STAGE" == mhtgr-pilot || "$STAGE" == mhtgr-depletion ]]; then
             override=$(jq -nc --arg id "gha-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" '{nodePropertyOverrides:[{targetNodes:"0:",containerOverrides:{environment:[{name:"SHARED_RUN_ID",value:$id}]}}]}')
             args+=(--node-overrides "$override")
           fi
@@ -80,6 +91,15 @@ jobs:
           echo "job_id=$job_id" >> "$GITHUB_OUTPUT"
           echo "Submitted Batch job \`$job_id\`" >> "$GITHUB_STEP_SUMMARY"
           echo "Definition: \`$definition\`" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$STAGE" == mhtgr-* ]]; then
+            results=$(jq -er .results_s3_uri infra/registration.json)
+            run_path="$job_id/attempt-1"
+            if [[ "$STAGE" == mhtgr-pilot || "$STAGE" == mhtgr-depletion ]]; then
+              run_path="gha-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/attempt-1"
+            fi
+            echo "Benchmark output after completion: \`$results/$run_path/\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "Download comparison.html with benchmark-comparison.png; comparison.md, CSV and JSON are also uploaded. Geometry stage produces plots and geometry-audit.json instead." >> "$GITHUB_STEP_SUMMARY"
+          fi
   monitor_1:
     name: Watch Batch (1/6)
     needs: submit

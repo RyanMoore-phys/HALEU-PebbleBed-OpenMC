@@ -62,6 +62,15 @@ inside all 210 intended fuel materials. `mhtgr-geometry` additionally runs OpenM
 geometry-debug and writes xy/xz plots. Inspect its log for unvisited/unchecked cells:
 a successful sampled geometry-debug run is not a mathematical proof of all geometry.
 
+Automatic material-cell offset tables are disabled: the model uses one distinct
+material per compact, ordinary cell tallies and material-based depletion, not
+distributed-cell/instance tallies. The first AWS geometry run exhausted its 28 GiB
+limit during offset preparation for plotting. This change targets that allocation;
+peak memory and successful geometry-debug still need verification on AWS. The
+TRISO tracking grid has a 1e-8 cm numerical padding to avoid boundary-bin rounding;
+physical compact/slice boundaries are unchanged. Any remaining out-of-grid TRISO
+warning is treated as an error instead of silently continuing.
+
 No benchmark simulation has been run by the coding assistant locally. There are
 no fabricated current-model results in the reference files.
 

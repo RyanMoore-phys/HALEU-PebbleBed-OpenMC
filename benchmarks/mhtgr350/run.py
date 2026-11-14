@@ -38,7 +38,13 @@ def main():
         args.run_dir.mkdir(parents=True,exist_ok=False)
     comm.Barrier()
     os.chdir(args.run_dir)
+    if comm.rank==0:
+        print('Building explicit-TRISO benchmark geometry...',flush=True)
     model,fuels,pins,audit = build(case)
+    if comm.rank==0:
+        print(f'Geometry built: {len(fuels)} fuel materials; '
+              f'{audit["kernels_per_compact"]} kernels per compact; '
+              'automatic material-cell offset tables disabled.',flush=True)
     hashes = comm.allgather(audit['packing_sha256'])
     if len(set(hashes)) != 1:
         raise ValueError('MPI ranks built different TRISO packings')
@@ -75,8 +81,11 @@ def main():
             plot.color_by = 'material'
             model.plots.append(plot)
         model.export_to_model_xml()
+        print('Geometry XML exported; starting OpenMC plotting...',flush=True)
         openmc.plot_geometry()
+        print('Plotting completed; starting OpenMC geometry-debug...',flush=True)
         model.run(geometry_debug=True)
+        print('OpenMC geometry-debug completed.',flush=True)
         audit['geometry_debug']='completed; inspect log for unchecked cells'
         Path('geometry-audit.json').write_text(json.dumps(audit,indent=2))
     elif case['mode']=='transport':

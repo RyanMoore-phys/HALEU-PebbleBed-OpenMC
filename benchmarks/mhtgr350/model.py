@@ -6,6 +6,7 @@ not the finite 79.3 cm reactor element. Slice/packing sensitivity must be checke
 import hashlib
 import json
 import math
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -60,7 +61,12 @@ def build(case):
     pf = len(centers)*4*math.pi*radii[-1]**3/3/(math.pi*d['compact_radius_cm']**2*height)
     if abs(pf/d['packing_fraction']-1)>.001:
         raise ValueError('Realized packing fraction differs by more than 0.1%')
-    bounds = compact.bounding_box
+    # Packing can put a sphere tangent to a compact end plane. An exactly equal
+    # tracking-grid boundary can classify its bounding box into an outside bin
+    # through floating-point rounding. Pad only the acceleration grid; the
+    # physical cylinder and axial surfaces remain unchanged.
+    lower, upper = compact.bounding_box
+    bounds = (np.asarray(lower)-1e-8, np.asarray(upper)+1e-8)
     shape = np.maximum(1,np.ceil((bounds[1]-bounds[0])/(6*radii[-1])).astype(int))
     local_surfaces = [openmc.Sphere(r=r) for r in radii[:-1]]
     layer_regions = openmc.model.subdivide(local_surfaces)
@@ -97,8 +103,10 @@ def build(case):
         layers = [fuel]+[materials[k] for k in ('buffer','ipyc','sic','opyc')]
         triso = openmc.Universe(cells=[openmc.Cell(fill=m,region=r) for m,r in zip(layers,layer_regions)])
         particles = [openmc.model.TRISO(radii[-1],triso,center) for center in centers]
-        packed = openmc.model.create_triso_lattice(particles,bounds[0],(bounds[1]-bounds[0])/shape,
-                                                  tuple(shape),materials['matrix'])
+        with warnings.catch_warnings():
+            warnings.filterwarnings('error', message='TRISO particle is partially or completely.*')
+            packed = openmc.model.create_triso_lattice(particles,bounds[0],(bounds[1]-bounds[0])/shape,
+                                                      tuple(shape),materials['matrix'])
         local_cylinder = openmc.ZCylinder(r=d['compact_radius_cm'])
         local = openmc.Universe(cells=[openmc.Cell(fill=packed,region=-local_cylinder),
                                        openmc.Cell(fill=materials['helium'],region=+local_cylinder)])
@@ -113,6 +121,10 @@ def build(case):
     cells.append(openmc.Cell(fill=materials['graphite'],region=graphite_region))
     geometry = openmc.Geometry(cells)
     settings = openmc.Settings()
+    # Each compact already has a distinct material; no distribcell/instance
+    # tallies or distributed materials are used. Avoid offset tables for every
+    # repeated TRISO layer, which exhausted the 28 GiB container during plotting.
+    settings.material_cell_offsets = False
     settings.particles, settings.batches = case['particles'],case['batches']
     settings.inactive, settings.seed = case['inactive'],case['transport_seed']
     settings.temperature = {'default':temperature,'method':'interpolation','tolerance':.5}
@@ -135,5 +147,6 @@ def build(case):
     audit.update(kernels_per_compact=len(centers),realized_packing_fraction=pf,
                  minimum_TRISO_separation_cm=float(nearest),source_locations_checked=len(sources),
                  packing_sha256=hashlib.sha256(centers.tobytes()).hexdigest(),
+                 tracking_grid_padding_cm=1e-8,material_cell_offsets=False,
                  slice_height_cm=height,geometry_debug='not_run')
     return model, fuels, pin_metadata, audit

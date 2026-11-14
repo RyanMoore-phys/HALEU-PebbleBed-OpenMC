@@ -7,6 +7,7 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 host = socket.gethostname()
 print(f"Rank {rank} on {host}: MPI initialized", flush=True)
+print(f"Rank {rank}: {MPI.Get_library_version().strip()}", flush=True)
 if comm.Get_size() != 2:
     raise SystemExit("Expected exactly two ranks")
 hosts = comm.allgather(host)
@@ -22,6 +23,7 @@ for size in (64, 1024 * 1024):
                   recvbuf=[incoming, MPI.BYTE], source=peer)
     if incoming != bytes([peer + 1]) * size:
         raise SystemExit(f"Payload mismatch on rank {rank}")
+    print(f"Rank {rank}: validated {size} bytes", flush=True)
 comm.Barrier()
 if rank == 0:
     print(f"MPI CHECK PASSED: bidirectional exchange on {hosts}", flush=True)

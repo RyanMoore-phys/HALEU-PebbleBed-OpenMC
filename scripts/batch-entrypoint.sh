@@ -93,6 +93,9 @@ Host *
 EOF
     mv "$mesh/$index.tmp" "$mesh/$index.host"
     echo "Node $index ready at $ipaddr"
+    if [[ $mode == mpi-check ]]; then
+        ip -brief -4 address
+    fi
     if [[ $index != "$main" ]]; then
         exec sleep infinity
     fi
@@ -107,7 +110,12 @@ EOF
     fi
     # One rank owns each node. OpenMP binds its 16 threads to hardware threads.
     export OMP_PLACES=threads OMP_PROC_BIND=spread
+    # Restrict MPI payload traffic to the task ENIs, excluding ECS local interfaces.
+    # This CIDR matches the deployed Batch subnet; override if that subnet changes.
+    mpi_tcp_subnet=${MPI_TCP_SUBNET:-10.72.1.0/24}
+    echo "MPI transport: ob1 / self,tcp; TCP subnet: $mpi_tcp_subnet"
     "${launcher[@]}" mpirun --allow-run-as-root --prefix /opt/block --hostfile "$mesh/hostfile" -np "$nodes" \
+      --mca pml ob1 --mca btl self,tcp --mca btl_tcp_if_include "$mpi_tcp_subnet" \
       --map-by ppr:1:node --bind-to none --display-map --wdir /app \
       -x OMP_NUM_THREADS -x OMP_PLACES -x OMP_PROC_BIND -x OPENBLAS_NUM_THREADS \
       -x OPENMC_CROSS_SECTIONS -x OPENMC_CHAIN_FILE -x MPLBACKEND "${driver[@]}"

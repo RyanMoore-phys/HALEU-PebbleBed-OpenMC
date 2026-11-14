@@ -54,8 +54,11 @@ jobs:
           QUEUE: ${{ fromJSON(steps.deployment.outputs.config).queue }}
           STAGE: ${{ inputs.stage }}
         run: |
-          definition=$(jq -er --arg name "$STAGE" '.definitions[$name]' infra/deployment.json)
-          [[ "$definition" =~ :[0-9]+$ ]]
+          definition=$(jq -r --arg name "$STAGE" '.definitions[$name] // ""' infra/deployment.json)
+          if [[ ! "$definition" =~ :[0-9]+$ ]]; then
+            echo "::error::Register block-$STAGE and pin its revision ARN under definitions.$STAGE in infra/deployment.json on main."
+            exit 1
+          fi
           args=()
           if [[ "$STAGE" == mpi-check || "$STAGE" == mpi-smoke || "$STAGE" == production ]]; then
             override=$(jq -nc --arg id "gha-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" '{nodePropertyOverrides:[{targetNodes:"0:",containerOverrides:{environment:[{name:"SHARED_RUN_ID",value:$id}]}}]}')

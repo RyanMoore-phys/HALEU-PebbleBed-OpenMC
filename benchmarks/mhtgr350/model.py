@@ -127,7 +127,8 @@ def build(case):
     settings.material_cell_offsets = False
     settings.particles, settings.batches = case['particles'],case['batches']
     settings.inactive, settings.seed = case['inactive'],case['transport_seed']
-    settings.temperature = {'default':temperature,'method':'interpolation','tolerance':.5}
+    settings.temperature = {'default':temperature,'method':'interpolation',
+                            'tolerance':case['temperature_tolerance_K']}
     settings.source = sources
     settings.max_lost_particles = 1
     mesh = openmc.RegularMesh()

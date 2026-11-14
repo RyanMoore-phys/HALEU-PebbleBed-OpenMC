@@ -16,5 +16,6 @@
   "report_burnup_MWd_kgHM": [
     0,
     0.5
-  ]
+  ],
+  "temperature_tolerance_K": 0.5
 }

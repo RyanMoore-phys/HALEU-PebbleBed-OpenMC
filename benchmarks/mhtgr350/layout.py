@@ -23,6 +23,9 @@ def validate_case(case):
         raise ValueError('Axial slice height outside supported range')
     if case['max_abs_delta_k_pcm']<=0 or case['max_k_sigma_pcm']<=0:
         raise ValueError('Comparison limits must be positive')
+    limit = 3.0 if case['exercise']=='1a' else .5
+    if not 0 < case['temperature_tolerance_K'] <= limit:
+        raise ValueError('Temperature tolerance exceeds the documented data approximation')
 
 
 def pin_map(pitch=1.88):

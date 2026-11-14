@@ -97,8 +97,13 @@ transport seeds, examining source convergence as well as the reported uncertaint
 The current uploaded library is ENDF/B-VIII.0, while the specification encourages
 ENDF/B-VII.0. Reports identify this as an exploratory library comparison. For a
 closer reproduction, prepare a separately versioned VII.0 library and consistent
-depletion chain; do not overwrite the existing EFS data version. The 293.6 K case
-permits a 0.5 K data-temperature tolerance for a 294 K tabulation. The hot case
+depletion chain; do not overwrite the existing EFS data version. Inspection of the
+uploaded VIII.0 graphite HDF5 file showed temperature labels beginning at **296 K**.
+The cold cases retain 293.6 K but permit a **3 K interpolation-endpoint tolerance**,
+allowing the 296 K graphite table (and a nearby neutron-data endpoint) to be used.
+This is a disclosed approximation, not an exact-temperature reproduction. Use
+appropriately processed 293.6 K data for a stricter comparison. The hot case retains
+a 0.5 K tolerance and
 requires usable 1200 K data. Manifest, chain and cross-section XML hashes are saved.
 
 Default **project screening limits**, not OECD acceptance criteria:

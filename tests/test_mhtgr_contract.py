@@ -54,6 +54,14 @@ class GeometryContract(unittest.TestCase):
         c=json.loads((ROOT/'cases/mhtgr-cold.json').read_text());c['temperature_K']=1200
         with self.assertRaises(ValueError):validate_case(c)
 
+    def test_temperature_tolerance_is_explicit_and_bounded(self):
+        cold=json.loads((ROOT/'cases/mhtgr-cold.json').read_text())
+        self.assertGreaterEqual(cold['temperature_tolerance_K'],296-cold['temperature_K'])
+        hot=json.loads((ROOT/'cases/mhtgr-pilot.json').read_text())
+        self.assertEqual(hot['temperature_tolerance_K'],.5)
+        cold['temperature_tolerance_K']=10
+        with self.assertRaises(ValueError):validate_case(cold)
+
 
 class ComparisonContract(unittest.TestCase):
     def run_compare(self,actual,targets=None):

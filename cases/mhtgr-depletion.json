@@ -28,5 +28,6 @@
     90,
     100,
     120
-  ]
+  ],
+  "temperature_tolerance_K": 0.5
 }

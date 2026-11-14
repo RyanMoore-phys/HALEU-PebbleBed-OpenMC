@@ -40,6 +40,11 @@ def main():
     os.chdir(args.run_dir)
     if comm.rank==0:
         print('Building explicit-TRISO benchmark geometry...',flush=True)
+        print(f'Temperature: {case["temperature_K"]} K; interpolation endpoint '
+              f'tolerance: {case["temperature_tolerance_K"]} K.',flush=True)
+        if case['exercise']=='1a':
+            print('Cold-case approximation: the supplied VIII.0 graphite table starts '
+                  'at 296 K; the 3 K tolerance permits its use at 293.6 K.',flush=True)
     model,fuels,pins,audit = build(case)
     if comm.rank==0:
         print(f'Geometry built: {len(fuels)} fuel materials; '

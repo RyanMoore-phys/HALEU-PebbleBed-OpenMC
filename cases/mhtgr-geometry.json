@@ -13,5 +13,6 @@
   "exercise": "1a",
   "mode": "geometry",
   "temperature_K": 293.6,
-  "report_burnup_MWd_kgHM": []
+  "report_burnup_MWd_kgHM": [],
+  "temperature_tolerance_K": 3.0
 }

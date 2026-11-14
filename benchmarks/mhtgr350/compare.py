@@ -84,6 +84,11 @@ def main():
         'Source convergence and timestep sensitivity require separate runs; a green screen does not establish them.',
         'Only multiplication factor is automatically compared. Pin inventories are exported without a reference comparison.'
     ]
+    caveats.append(f'Temperature interpolation endpoint tolerance: {case["temperature_tolerance_K"]} K.')
+    if case['exercise']=='1a':
+        caveats.append('Cold data approximation: the supplied VIII.0 graphite thermal table '
+                       'starts at 296 K and is permitted at the requested 293.6 K. '
+                       'This is not an exact-temperature reproduction.')
     report = dict(status='screening_pass' if passed else 'screening_fail',
                   validation_status='not_validated',exercise=case['exercise'],rows=rows,
                   limits=dict(max_abs_delta_k_pcm=case['max_abs_delta_k_pcm'],max_k_sigma_pcm=case['max_k_sigma_pcm']),

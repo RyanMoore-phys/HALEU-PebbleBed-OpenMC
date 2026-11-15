@@ -125,6 +125,11 @@ def build(case):
     # tallies or distributed materials are used. Avoid offset tables for every
     # repeated TRISO layer, which exhausted the 28 GiB container during plotting.
     settings.material_cell_offsets = False
+    # The explicit TRISO geometry creates a very large optional HDF5 geometry
+    # summary. Serial metadata writes to EFS stalled the geometry check for >30
+    # minutes. XML/audit/plots retain geometry provenance; statepoints and
+    # depletion_results.h5 are still written and used by the comparison code.
+    settings.output = {'summary': False}
     settings.particles, settings.batches = case['particles'],case['batches']
     settings.inactive, settings.seed = case['inactive'],case['transport_seed']
     settings.temperature = {'default':temperature,'method':'interpolation',

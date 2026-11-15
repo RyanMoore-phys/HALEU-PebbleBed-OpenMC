@@ -71,6 +71,12 @@ TRISO tracking grid has a 1e-8 cm numerical padding to avoid boundary-bin roundi
 physical compact/slice boundaries are unchanged. Any remaining out-of-grid TRISO
 warning is treated as an error instead of silently continuing.
 
+The optional `summary.h5` geometry export is disabled. The third AWS geometry
+attempt remained at that write for over 30 minutes; EFS still had burst credits
+and low reported PercentIOLimit. Serial HDF5 metadata operations are a suspected
+bottleneck, not a proven deadlock. XML, plots and geometry-audit files retain the
+geometry record; transport statepoints and depletion results remain enabled.
+
 No benchmark simulation has been run by the coding assistant locally. There are
 no fabricated current-model results in the reference files.
 

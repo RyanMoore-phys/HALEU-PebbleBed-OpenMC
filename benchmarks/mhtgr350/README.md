@@ -1,9 +1,12 @@
 # MHTGR-350 numerical benchmark workflow
 
-**Current status:** the first completed cold comparison failed its numerical
-screen. Read the [baseline audit and next-run guide](audits/cold-baseline-review.md)
-before submitting another job. It documents the preserved result, confirmed
-corrections and the optional geometry → cold → pilot workflow (no production).
+**Current status:** both completed cold comparisons failed their numerical
+screens. The current cold, pilot and depletion cases use **advisory** benchmark
+policy at the user's request: a completed calculation/report/upload can succeed
+while the report explicitly retains `screening_fail` and `not_validated`.
+See [the exploratory production guide](exploratory-production.md) for the current
+run policy. The [baseline audit](audits/cold-baseline-review.md) preserves the
+earlier strict-policy investigation and findings.
 
 This implements **Phase III exercises 1a and 2a (without burnable poisons)**.
 It is a candidate OpenMC implementation: an AWS geometry check completed, but
@@ -143,15 +146,17 @@ initial screens are looser than the specification's convergence recommendation.
 4. Use Run workflow on main. Select **mhtgr-geometry** and paste its new exact ARN
    into `job_definition_arn`. Inspect the uploaded plots, pin map, geometry audit
    and CloudWatch debug output. Do not proceed with unexplained errors/coverage gaps.
-5. Run **mhtgr-cold**, again with its own ARN. Inspect `comparison.html`/PNG and
+5. Optional for exploratory production: run **mhtgr-cold**, again with its own ARN. Inspect `comparison.html`/PNG and
    `source-convergence.png`. Resolve large deviations and test convergence before
    attempting depletion. Expected published mean is 1.23600 (Table 4); this is a
    reference value, not a prediction or measured result from our model.
-6. Run **mhtgr-pilot** on two nodes. It reaches 0.5 MWd/kgHM at 1200 K and compares
+6. Optional for exploratory production: run **mhtgr-pilot** on two nodes. It reaches 0.5 MWd/kgHM at 1200 K and compares
    both initial and final values to Table 11. Use elapsed time and file sizes to
    estimate the full campaign; don't scale the old smoke time blindly.
-7. Only after those reviews, run **mhtgr-depletion**: eight nodes, one MPI rank and
-   16 OpenMP threads per node. Full reference comparison runs automatically.
+7. For the user-selected exploratory campaign, directly dispatch **mhtgr-depletion**:
+   eight nodes, one MPI rank and 16 OpenMP threads per node. Full reference
+   comparison runs automatically at completion. Skipping the preceding studies
+   leaves their scientific and runtime uncertainties unresolved.
 
 No production run, infrastructure mutation or tag push is performed by these
 local edits. The older `geometry`, `smoke`, `mpi-smoke` and `production` stages still
@@ -168,10 +173,13 @@ HTML file locally, or view the PNG and `comparison.md` separately. Machine-reada
 files are `comparison.csv` and `comparison.json`. Depletion also exports
 `pin-inventories.csv` and retains `depletion_results.h5`; `run.json` records provenance.
 
-When a completed calculation fails a numerical screen, the launcher uploads its
-report **before** exiting nonzero, so Batch/GitHub fail without hiding the evidence.
-Missing data, duplicate burnup points, NaNs, wrong schedules and incomplete runs
-cannot pass. A simulation crash before comparison leaves its logs and EFS files
+With `benchmark_policy: advisory`, a completed numerical comparison does not fail
+Batch solely for bias or uncertainty outside the screen. The report retains the
+actual screen result and `validation_status: not_validated`. Set the case policy
+to `strict` to restore numerical gating; omitted policies default to strict.
+Thresholds and reference values are unchanged. Missing data, duplicate burnup
+points, NaNs, wrong schedules, incomplete runs, report errors and failed uploads
+still fail the workflow. A simulation crash before comparison leaves its logs and EFS files
 but may not upload a comparison report. Publishing does not trigger paid jobs.
 
 For local static checks only:

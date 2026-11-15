@@ -11,6 +11,7 @@
   "max_abs_delta_k_pcm": 500,
   "max_step_MWd_kgHM": 1.0,
   "exercise": "1a",
+  "benchmark_policy": "advisory",
   "mode": "transport",
   "temperature_K": 293.6,
   "report_burnup_MWd_kgHM": [

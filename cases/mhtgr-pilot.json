@@ -11,6 +11,7 @@
   "max_abs_delta_k_pcm": 500,
   "max_step_MWd_kgHM": 1.0,
   "exercise": "2a",
+  "benchmark_policy": "advisory",
   "mode": "depletion",
   "temperature_K": 1200.0,
   "report_burnup_MWd_kgHM": [

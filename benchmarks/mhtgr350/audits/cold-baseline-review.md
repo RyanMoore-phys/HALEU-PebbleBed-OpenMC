@@ -1,5 +1,11 @@
 # Cold benchmark audit and next-run guide
 
+**Historical strict-policy guide:** the user subsequently selected advisory
+comparison and a direct exploratory production run. Follow
+[the current production guide](../exploratory-production.md) for execution.
+The numerical findings below remain valid; the strict workflow gates described
+below apply to the earlier release, not the current advisory cases.
+
 Audit date: 2026-11-15 UTC. Status: **unresolved benchmark mismatch**.
 This review used source inspection, the published specification/report and existing
 AWS artifacts. No tests, OpenMC calculations, builds or new AWS jobs were run.

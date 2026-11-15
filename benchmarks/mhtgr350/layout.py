@@ -8,6 +8,8 @@ from collections import Counter
 
 
 def validate_case(case):
+    if case.get('benchmark_policy', 'strict') not in ('strict', 'advisory'):
+        raise ValueError('benchmark_policy must be strict or advisory')
     expected = {'1a':293.6, '2a':1200.0}
     if case['exercise'] not in expected or case['temperature_K'] != expected[case['exercise']]:
         raise ValueError('Temperature does not match the selected benchmark exercise')

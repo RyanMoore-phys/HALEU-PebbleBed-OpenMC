@@ -54,7 +54,7 @@ jobs:
             echo "$stage=$definition" >> "$GITHUB_OUTPUT"
             echo "$stage: \`$definition\`" >> "$GITHUB_STEP_SUMMARY"
           done
-          echo 'Order: geometry → cold benchmark → depletion pilot. Production is never submitted. Each stage requires the preceding workflow to succeed, including its Batch numerical screen.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Order: geometry → cold benchmark → depletion pilot. Production is never submitted. Each stage requires calculation, comparison generation and upload success. Numerical agreement follows the policy embedded in the image; advisory screening failures do not block progression. Workflow success is not benchmark validation.' >> "$GITHUB_STEP_SUMMARY"
   geometry:
     needs: definitions
     uses: ./.github/workflows/release-run.yml

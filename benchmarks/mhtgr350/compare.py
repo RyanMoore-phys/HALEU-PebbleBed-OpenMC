@@ -37,6 +37,9 @@ def main():
     directory = cli.parse_args().run_dir
     meta = json.loads((directory/'run.json').read_text())
     case = meta['case']
+    policy = case.get('benchmark_policy', 'strict')
+    if policy not in ('strict', 'advisory'):
+        raise ValueError('benchmark_policy must be strict or advisory')
     reference = json.loads((Path(__file__).parent/'reference.json').read_text())
     for filename,key in [('reference.json','reference_sha256'),('specification.json','specification_sha256')]:
         digest=hashlib.sha256((Path(__file__).parent/filename).read_bytes()).hexdigest()
@@ -75,6 +78,7 @@ def main():
                         case['max_abs_delta_k_pcm'],case['max_k_sigma_pcm'])
     passed = all(r['screening_pass'] for r in rows)
     caveats = [
+        f'Benchmark policy: {policy}. Workflow success is not benchmark validation.',
         'Numerical code-to-code comparison, not experimental validation or reactor certification.',
         'Screening limits are project settings, not OECD/NEA acceptance criteria.',
         'Reference SD is between-code spread, not experimental uncertainty.',
@@ -90,6 +94,8 @@ def main():
                        'starts at 296 K and is permitted at the requested 293.6 K. '
                        'This is not an exact-temperature reproduction.')
     report = dict(status='screening_pass' if passed else 'screening_fail',
+                  calculation_status='completed',comparison_status='completed',
+                  benchmark_policy=policy,
                   validation_status='not_validated',exercise=case['exercise'],rows=rows,
                   limits=dict(max_abs_delta_k_pcm=case['max_abs_delta_k_pcm'],max_k_sigma_pcm=case['max_k_sigma_pcm']),
                   reference=reference['url'],reference_report=reference['report'],caveats=caveats,
@@ -121,6 +127,8 @@ def main():
         for ax in axes:ax.axvline(case['inactive'],color='red',linestyle='--')
         fig.savefig(directory/'source-convergence.png',dpi=150); plt.close(fig)
     lines = [f'# MHTGR exercise {case["exercise"]}: {report["status"]}',
+             '',f'Calculation: completed. Comparison: completed. Policy: {policy}.',
+             'Validation: not_validated. Workflow success does not imply benchmark agreement.',
              '',f'Reference: {reference["url"]}','',
              '| Burnup | OpenMC k | σ(k) | Reference mean | Δk × 100,000 | Screen |',
              '|---:|---:|---:|---:|---:|---|']
@@ -133,8 +141,12 @@ def main():
         '<h1>MHTGR benchmark comparison</h1><img src="benchmark-comparison.png" alt="Benchmark comparison">'
         '<pre>'+html.escape(summary)+'</pre>')
     print(summary,flush=True)
-    # Caller uploads even a failed comparison before propagating this status to Batch.
-    return 0 if passed else 2
+    # Advisory applies only to a completed numerical screen. Missing/corrupt data,
+    # incomplete histories and report-generation errors still raise and fail.
+    if not passed and policy == 'advisory':
+        print('BENCHMARK WARNING: screening_fail; validation not established. '
+              'Advisory policy permits workflow success after output upload.',flush=True)
+    return 0 if passed or policy == 'advisory' else 2
 
 
 if __name__=='__main__':

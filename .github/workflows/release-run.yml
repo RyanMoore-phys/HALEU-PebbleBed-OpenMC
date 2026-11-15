@@ -107,6 +107,7 @@ jobs:
             fi
             echo "Benchmark output after completion: \`$results/$run_path/\`" >> "$GITHUB_STEP_SUMMARY"
             echo "Download comparison.html with benchmark-comparison.png; comparison.md, CSV and JSON are also uploaded. Geometry stage produces plots and geometry-audit.json instead." >> "$GITHUB_STEP_SUMMARY"
+            echo "Benchmark agreement follows the case policy embedded in this image. Under advisory policy, Batch success means calculation, report generation and upload completed; inspect comparison.json for screening_pass/screening_fail. It does not establish validation." >> "$GITHUB_STEP_SUMMARY"
           fi
   monitor_1:
     name: Watch Batch (1/6)

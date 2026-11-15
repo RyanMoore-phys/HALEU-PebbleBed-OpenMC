@@ -1,5 +1,29 @@
 # One exploratory depletion campaign with advisory comparison
 
+## Current shortened campaign
+
+The user requested termination of job `fcb7f110-37e6-4ca4-be1d-aeff71f93149`
+and a shorter replacement targeting less than 40 hours. The new case ends at
+**20 MWd/kgHM**, with report points **0, 0.5, 5, 10, 20**. It retains the early
+small steps and 1 MWd/kgHM maximum interval. This gives 25 intervals and about
+51 transport solves, rather than 125 intervals/251 solves to 120 MWd/kgHM.
+At the first measured solve's 22.6 minutes, 51 solves represent about 19.2 hours
+of transport work, before initialization, depletion, I/O and runtime variation.
+This is a planning estimate, not a completion guarantee.
+
+The new Batch timeout is **144000 seconds (40 hours)** after the job starts;
+queue/startup and best-effort termination can add wall-clock time. Keep eight
+nodes × four vCPUs: these are cooperating MPI ranks of one job, not independent
+cases. Reducing their count does not reduce the number of depletion solves.
+No physics, data, particles or batch counts changed for this shortening.
+
+Publish a new image and register it before dispatching. **Do not reuse revision
+10**, which contains the old 120 MWd/kgHM schedule and 48-hour timeout. The final
+report explicitly labels the simulated range; it is a partial benchmark study,
+not coverage of the full 120 MWd/kgHM reference. It starts from fresh fuel and
+does not resume the stopped run. Its existing EFS output directory is left intact:
+`/mnt/efs/runs/gha-43679695147-1/attempt-1/output/`.
+
 ## Current 32-vCPU configuration
 
 The 128-vCPU quota was applied in us-east-1; the deployment stays in us-east-2,
@@ -17,7 +41,7 @@ arn:aws:batch:us-east-2:591859078128:job-definition/block-mhtgr-depletion:9
 ```
 
 **Do not submit revision 9 for the current requested run.** Production is now
-configured locally for **25,000 particles per batch and a 48-hour timeout**.
+configured locally for **25,000 particles per batch and a 40-hour timeout**.
 Publish a new image and register it using the instructions below; paste the new
 ARN into a new manual dispatch. The old deployment pin has been cleared to avoid
 silently submitting revision 9. Commit the registration-script and
@@ -94,8 +118,8 @@ for this policy change.
 ## Cost and limitations
 
 The current production definition requests **eight nodes × 4 threads**, one
-MPI rank per node. It has a 48-hour attempt timeout, one attempt, and no implemented
-restart. The schedule remains 125 depletion intervals, about 251 transport solves,
+MPI rank per node. It has a 40-hour attempt timeout, one attempt, and no implemented
+restart. The shortened schedule has 25 depletion intervals, about 51 transport solves,
 at 25,000 particles and 250 batches per solve (100 inactive). Comparison runs at the end, not
 after every step. A timeout before completion can therefore prevent the final
 comparison report; the advisory policy does not prevent computational failures.
@@ -104,7 +128,7 @@ Skipping diagnostics avoids their costs but does not establish that production
 will finish within its timeout or cost less overall. The single-node cold runtime
 cannot reliably predict eight-node hot depletion performance. Reducing total CPUs
 from 128 to 32 increases runtime risk; halving particles reduces transport work
-but does not guarantee completion within 48 hours or a lower total bill. Statistical
+but does not guarantee completion within 40 hours or a lower total bill. Statistical
 uncertainty may increase. Timesteps, temperatures, data and screening limits remain
 unchanged. GitHub monitoring now has twelve five-hour windows (up to 60 hours),
 allowing some queue/startup time in addition to the Batch runtime allowance.

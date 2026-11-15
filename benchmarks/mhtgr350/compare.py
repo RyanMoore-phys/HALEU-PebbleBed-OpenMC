@@ -77,6 +77,8 @@ def main():
     rows = compare_rows(case['exercise'],case['report_burnup_MWd_kgHM'],actual,reference,
                         case['max_abs_delta_k_pcm'],case['max_k_sigma_pcm'])
     passed = all(r['screening_pass'] for r in rows)
+    compared_max = max(case['report_burnup_MWd_kgHM'])
+    reference_max = max(r['burnup'] for r in reference[case['exercise']])
     caveats = [
         f'Benchmark policy: {policy}. Workflow success is not benchmark validation.',
         'Numerical code-to-code comparison, not experimental validation or reactor certification.',
@@ -89,6 +91,10 @@ def main():
         'Only multiplication factor is automatically compared. Pin inventories are exported without a reference comparison.'
     ]
     caveats.append(f'Temperature interpolation endpoint tolerance: {case["temperature_tolerance_K"]} K.')
+    if case['mode']=='depletion':
+        caveats.append(f'Comparison covers 0–{compared_max:g} MWd/kgHM; the published '
+                       f'depletion reference extends to {reference_max:g} MWd/kgHM. '
+                       'No agreement is claimed beyond the simulated burnup range.')
     if case['exercise']=='1a':
         caveats.append('Cold data approximation: the supplied VIII.0 graphite thermal table '
                        'starts at 296 K and is permitted at the requested 293.6 K. '
@@ -96,6 +102,9 @@ def main():
     report = dict(status='screening_pass' if passed else 'screening_fail',
                   calculation_status='completed',comparison_status='completed',
                   benchmark_policy=policy,
+                  comparison_scope=dict(max_simulated_burnup_MWd_kgHM=compared_max,
+                                        max_reference_burnup_MWd_kgHM=reference_max,
+                                        full_reference_range=compared_max==reference_max),
                   validation_status='not_validated',exercise=case['exercise'],rows=rows,
                   limits=dict(max_abs_delta_k_pcm=case['max_abs_delta_k_pcm'],max_k_sigma_pcm=case['max_k_sigma_pcm']),
                   reference=reference['url'],reference_report=reference['report'],caveats=caveats,

@@ -91,17 +91,21 @@ no fabricated current-model results in the reference files.
 ## Numerical settings and interpretation
 
 Exercise 1a uses 293.6 K; exercise 2a uses 1200 K, 100 W/g initial heavy metal
-and report points 0, 0.5, 5, 10, 20, ..., 100, 120 MWd/kgHM. Those burnup units
+and published report points 0, 0.5, 5, 10, 20, ..., 100, 120 MWd/kgHM. The current
+shortened production case stops at 20 and compares only 0, 0.5, 5, 10 and 20.
+It does not cover the full reference range. Those burnup units
 are numerically equal to GWd/tHM. Specific power is applied only to the central
 depleting inventory via fission-Q normalization. The surrounding burned region
 does not contribute to the specified central heavy-metal mass.
 
 CE/CM integration resolves early burnup at 0.01, 0.05, 0.1, 0.2 and 0.5 MWd/kgHM,
-then uses increments no larger than 1 MWd/kgHM. The full case has 125 intervals
-and approximately 251 transport solves; it is substantially larger than the old
-smoke case. Halve the maximum interval and compare before accepting timestep
-convergence. There is no measured runtime estimate yet. The full job has a 48-hour
-timeout and no implemented restart; use the pilot to assess cost first.
+then uses increments no larger than 1 MWd/kgHM. The shortened case has 25 intervals
+and approximately 51 transport solves. The earlier full-range schedule had 125
+intervals and approximately 251 solves. Halve the maximum interval and compare
+before accepting timestep convergence. The first measured hot solve took about
+22.6 minutes; extrapolating that gives about 19.2 hours for transport alone in the
+shortened case, not a guaranteed runtime. The job has a 40-hour timeout and no
+implemented restart.
 
 Cold and pilot cases use 50,000 particles; production uses 25,000 particles.
 All three use 250 batches and 100 inactive batches. These

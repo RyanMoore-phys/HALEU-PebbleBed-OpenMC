@@ -38,7 +38,7 @@ for stage in seed geometry smoke mpi-check mpi-smoke production mhtgr-geometry m
           "awslogs-region":env.AWS_REGION,"awslogs-stream-prefix":"block"}}
       };
       {jobDefinitionName:("block-"+$stage),retryStrategy:{attempts:1},
-       timeout:{attemptDurationSeconds:(if $stage=="mhtgr-depletion" then 172800 elif $stage=="production" then 86400 elif $stage=="mpi-check" then 600 else 7200 end)}}
+       timeout:{attemptDurationSeconds:(if $stage=="mhtgr-depletion" then 144000 elif $stage=="production" then 86400 elif $stage=="mpi-check" then 600 else 7200 end)}}
       + if $nodes==1 then {type:"container",containerProperties:container}
         else {type:"multinode",nodeProperties:{numNodes:$nodes,mainNode:0,
               nodeRangeProperties:[{targetNodes:"0:",container:(container

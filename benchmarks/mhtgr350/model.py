@@ -30,6 +30,9 @@ def material(name, densities, temperature):
     m.temperature = temperature
     if 'C_graph' in densities:
         m.add_s_alpha_beta('c_Graphite')
+    # add_nuclide automatically marks actinide-bearing materials depletable.
+    # Only the central fuel pins are explicitly opted into depletion below.
+    m.depletable = False
     return m
 
 
@@ -126,8 +129,8 @@ def build(case):
     # repeated TRISO layer, which exhausted the 28 GiB container during plotting.
     settings.material_cell_offsets = False
     # The explicit TRISO geometry creates a very large optional HDF5 geometry
-    # summary. Serial metadata writes to EFS stalled the geometry check for >30
-    # minutes. XML/audit/plots retain geometry provenance; statepoints and
+    # summary. An earlier job was stopped after >30 minutes at summary export;
+    # the cause was not established. XML/audit/plots retain provenance; statepoints and
     # depletion_results.h5 are still written and used by the comparison code.
     settings.output = {'summary': False}
     settings.particles, settings.batches = case['particles'],case['batches']
@@ -137,7 +140,13 @@ def build(case):
     settings.source = sources
     settings.max_lost_particles = 1
     mesh = openmc.RegularMesh()
-    mesh.lower_left,mesh.upper_right = (-21,-18,-height/2),(21,18,height/2)
+    # Fission also occurs in the fixed burned-fuel region outside the fresh block.
+    # Enclose the entire reflective supercell, with padding for boundary rounding.
+    extent_x = d['supercell_flat_to_flat_cm']/math.sqrt(3)
+    extent_y = d['supercell_flat_to_flat_cm']/2
+    pad = 1e-8
+    mesh.lower_left = (-extent_x-pad,-extent_y-pad,-height/2-pad)
+    mesh.upper_right = (extent_x+pad,extent_y+pad,height/2+pad)
     mesh.dimension = (20,20,1)
     settings.entropy_mesh = mesh
     tally = openmc.Tally(name='compact fission rates')
@@ -145,6 +154,9 @@ def build(case):
     tally.scores = ['fission']
     model = openmc.Model(geometry=geometry,materials=openmc.Materials(geometry.get_all_materials().values()),
                         settings=settings,tallies=openmc.Tallies([tally]))
+    depletable_ids = sorted(m.id for m in model.materials if m.depletable)
+    if depletable_ids != sorted(m.id for m in fuels):
+        raise ValueError('Only the 210 central fuel materials may be depletable')
     # Independent point-location check of translated fuel universes on every pin.
     for source,fuel in zip(sources,fuels):
         found = geometry.find(tuple(source.space.xyz))
@@ -154,5 +166,9 @@ def build(case):
                  minimum_TRISO_separation_cm=float(nearest),source_locations_checked=len(sources),
                  packing_sha256=hashlib.sha256(centers.tobytes()).hexdigest(),
                  tracking_grid_padding_cm=1e-8,material_cell_offsets=False,
+                 depletable_material_ids=depletable_ids,
+                 entropy_mesh=dict(lower_left=list(mesh.lower_left),
+                                   upper_right=list(mesh.upper_right),
+                                   dimension=list(mesh.dimension),scope='entire supercell'),
                  slice_height_cm=height,geometry_debug='not_run')
     return model, fuels, pin_metadata, audit

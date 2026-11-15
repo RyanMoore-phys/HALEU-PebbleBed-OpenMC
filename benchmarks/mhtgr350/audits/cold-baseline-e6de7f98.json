@@ -1,0 +1,180 @@
+{
+  "job_id": "e6de7f98-bd2a-4fa9-8d8f-67702572978c",
+  "job_definition": "arn:aws:batch:us-east-2:591859078128:job-definition/block-mhtgr-cold:6",
+  "image": "591859078128.dkr.ecr.us-east-2.amazonaws.com/block-depletion@sha256:738fb24d0b38999c4291b48ef273bf94048ed936586f0a801274e13dfe193bd2",
+  "exit_code": 2,
+  "started_at_ms": 1794706907160,
+  "stopped_at_ms": 1794709010655,
+  "s3_prefix": "s3://openmc-block-results-20261112214420463500000002/runs/e6de7f98-bd2a-4fa9-8d8f-67702572978c/attempt-1/",
+  "local_archive": "/Users/ryanmoore/Desktop/HALEU-PebbleBed-OpenMC/.local-artifacts/mhtgr-cold-e6de7f98",
+  "source_snapshot_note": "Local HEAD source snapshot; original run input XML and run.json are authoritative. Image-to-commit mapping not independently established.",
+  "local_source_commit": "7ea1639ca589f6fcc66bd59e69cc68ed494b701b",
+  "case": {
+    "benchmark": "OECD-NEA-MHTGR350-PhaseIII-1a-2a",
+    "particles": 50000,
+    "batches": 250,
+    "inactive": 100,
+    "transport_seed": 19,
+    "packing_seed": 7861,
+    "slice_height_cm": 1.0,
+    "nuclear_data_label": "ENDF/B-VIII.0 (user supplied; exploratory library comparison)",
+    "max_k_sigma_pcm": 50,
+    "max_abs_delta_k_pcm": 500,
+    "max_step_MWd_kgHM": 1.0,
+    "exercise": "1a",
+    "mode": "transport",
+    "temperature_K": 293.6,
+    "report_burnup_MWd_kgHM": [
+      0
+    ],
+    "temperature_tolerance_K": 3.0
+  },
+  "provenance": {
+    "specification_sha256": "4a51d0f515572fcbc0b2f566dde919cf9e4b666c715a7b9d9f207c2ceb827463",
+    "reference_sha256": "7153be3a499302f7c59e41d03aec7639ad457cab5d3c3c17e8634b9d6bba41ac",
+    "cross_sections_xml_sha256": "f2dc82602f3d0342ffb324eca5bb7d348c9fb682744039a490926b29073774d0",
+    "chain_sha256": "98bf49c92c821280087ee180763ce11b849be5faf5c2ff8ef8a3cd90bd93e87e",
+    "data_manifest_sha256": "b3dfa895524c35b26fc923fe6870f15e13dc32f76132c341c0a4733f62d4ea6e"
+  },
+  "result": {
+    "burnup": 0,
+    "k": 1.2249599321418616,
+    "sigma": 0.00036164400262950853,
+    "reference_mean": 1.236,
+    "reference_sd_pcm": 61.81,
+    "SERPENT": 1.23571,
+    "McCARD": 1.23519,
+    "delta_k_pcm": -1104.006785813838,
+    "delta_rho_pcm": -729.1743592576116,
+    "sigma_pcm": 36.164400262950856,
+    "screening_pass": false
+  },
+  "status": "screening_fail",
+  "files": [
+    {
+      "path": "cloudwatch.json",
+      "bytes": 117523,
+      "sha256": "806fac279962f5fc4030c3fa992ad01aa7e6d7cb8f73e94ac7e8a48254dba60c"
+    },
+    {
+      "path": "cloudwatch.log",
+      "bytes": 34641,
+      "sha256": "1e1473a6ecc6c029780c4899f2501c1be029b80d984fb4c6c93fd36d1e538e49"
+    },
+    {
+      "path": "cross_sections.xml",
+      "bytes": 37191,
+      "sha256": "f2dc82602f3d0342ffb324eca5bb7d348c9fb682744039a490926b29073774d0"
+    },
+    {
+      "path": "job.json",
+      "bytes": 5354,
+      "sha256": "7d60eeec92b76a4eb4da234957aa02742af2ab13149ab7460c90ddc0c7d5c325"
+    },
+    {
+      "path": "output/benchmark-comparison.png",
+      "bytes": 62868,
+      "sha256": "ed6a2593b57c662a9f6ad47a5c5740aa4734f0fdb4a277b821f8d35fa1c02b76"
+    },
+    {
+      "path": "output/comparison.csv",
+      "bytes": 250,
+      "sha256": "c89ef3065bd2c6bf9f9a4df05cfd16ec314f064db7025003e0b58cb05a603d5d"
+    },
+    {
+      "path": "output/comparison.html",
+      "bytes": 1614,
+      "sha256": "c4ae97e293c80d86406750e045b34abf5d2256d6d22836866aca779fe11f18c2"
+    },
+    {
+      "path": "output/comparison.json",
+      "bytes": 13483,
+      "sha256": "f16756f02fb4e0037681f405edb677962a9065b00db68ad8023a697ff4a18b08"
+    },
+    {
+      "path": "output/comparison.md",
+      "bytes": 1319,
+      "sha256": "cfe576ced5957f42b69757d23bd15c4b77d49917384b460402cd92bc9c8d39be"
+    },
+    {
+      "path": "output/geometry-audit.json",
+      "bytes": 644,
+      "sha256": "9be625c6824a54470ce271e2d51274ed78af2f7808382ccb8f9158f24165820a"
+    },
+    {
+      "path": "output/geometry.xml",
+      "bytes": 163978261,
+      "sha256": "5243173b5881300cca2ef77d8b200deb7c104b19b8905d1f84c866f8cf8a83df"
+    },
+    {
+      "path": "output/materials.xml",
+      "bytes": 79617,
+      "sha256": "b1fc2735ced7e4293e30bd0d7e1a2d22f3bb9a15424824e15c8656871ce19036"
+    },
+    {
+      "path": "output/pin-map.json",
+      "bytes": 28341,
+      "sha256": "904961be7562ab068a68e95063b701517313d12ca9b507171cca15aab3c7b5f4"
+    },
+    {
+      "path": "output/run.json",
+      "bytes": 33368,
+      "sha256": "18f5bf022836e450c32d0186d79433374e8c90f6d37943713b54b9d57fdebd7c"
+    },
+    {
+      "path": "output/settings.xml",
+      "bytes": 43265,
+      "sha256": "b4e8eefb4a51f83fa19fe1f65173641bf2e181cf6bd840646d9c7395903ea2f7"
+    },
+    {
+      "path": "output/source-convergence.png",
+      "bytes": 163970,
+      "sha256": "a9a39689822bff0acddd9e9f17dcee0d94bddf5d39cf110a157a3385e957cc99"
+    },
+    {
+      "path": "output/statepoint.250.h5",
+      "bytes": 5238096,
+      "sha256": "4ce5d6435c71809727f1153003c72581b2f8a2527bb9e93f3df44f3415ff6abe"
+    },
+    {
+      "path": "output/tallies.out",
+      "bytes": 21176,
+      "sha256": "4759931990961ac4f4910b69fe50362d258080fc8cbd83849f93604ff6e13d13"
+    },
+    {
+      "path": "output/tallies.xml",
+      "bytes": 1675,
+      "sha256": "6d2a1bfa7fd5547844e60e0f18190803ee60d852e661aba269168f4f1d80d6d3"
+    },
+    {
+      "path": "source/compare.py",
+      "bytes": 8872,
+      "sha256": "5d63aab27a8158f57c5c8ede6fb3c12ae9efbdb596f89fd232abf5726b09c321"
+    },
+    {
+      "path": "source/layout.py",
+      "bytes": 4729,
+      "sha256": "ef0f0e60f2a3400355888df92d588b9cd3abc9c5e30641ac4bac0f6000a196d6"
+    },
+    {
+      "path": "source/model.py",
+      "bytes": 8979,
+      "sha256": "86668f81b9512470329f7f625e93eaadae4af0328d3f151df93329b279388d03"
+    },
+    {
+      "path": "source/reference.json",
+      "bytes": 3194,
+      "sha256": "7153be3a499302f7c59e41d03aec7639ad457cab5d3c3c17e8634b9d6bba41ac"
+    },
+    {
+      "path": "source/run.py",
+      "bytes": 5540,
+      "sha256": "4023511473824340f535e2d929d9c1740786e69cd96055b52def1724a8676f98"
+    },
+    {
+      "path": "source/specification.json",
+      "bytes": 2500,
+      "sha256": "4a51d0f515572fcbc0b2f566dde919cf9e4b666c715a7b9d9f207c2ceb827463"
+    }
+  ]
+}

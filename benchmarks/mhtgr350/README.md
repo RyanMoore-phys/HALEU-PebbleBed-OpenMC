@@ -1,8 +1,13 @@
 # MHTGR-350 numerical benchmark workflow
 
+**Current status:** the first completed cold comparison failed its numerical
+screen. Read the [baseline audit and next-run guide](audits/cold-baseline-review.md)
+before submitting another job. It documents the preserved result, confirmed
+corrections and the optional geometry → cold → pilot workflow (no production).
+
 This implements **Phase III exercises 1a and 2a (without burnable poisons)**.
-It is a candidate OpenMC implementation awaiting AWS geometry-debug, convergence
-studies and numerical comparison. It is not a verified Antares model, an experimental
+It is a candidate OpenMC implementation: an AWS geometry check completed, but
+benchmark agreement and convergence remain unresolved. It is not a verified Antares model, an experimental
 validation, or a claim that the OECD/NEA benchmark has already been reproduced.
 
 ## Reference and scope

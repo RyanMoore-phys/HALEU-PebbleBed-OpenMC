@@ -1,0 +1,75 @@
+name: MHTGR sequential checks (no production)
+on:
+  workflow_dispatch:
+    inputs:
+      geometry_definition:
+        description: Exact mhtgr-geometry ARN (blank uses deployment.json)
+        type: string
+        required: false
+      cold_definition:
+        description: Exact mhtgr-cold ARN from the same release
+        type: string
+        required: false
+      pilot_definition:
+        description: Exact mhtgr-pilot ARN from the same release
+        type: string
+        required: false
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: mhtgr-preproduction
+  cancel-in-progress: false
+jobs:
+  definitions:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      geometry: ${{ steps.definitions.outputs.geometry }}
+      cold: ${{ steps.definitions.outputs.cold }}
+      pilot: ${{ steps.definitions.outputs.pilot }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Resolve all definitions before submitting any job
+        id: definitions
+        env:
+          GEOMETRY: ${{ inputs.geometry_definition }}
+          COLD: ${{ inputs.cold_definition }}
+          PILOT: ${{ inputs.pilot_definition }}
+        run: |
+          region=$(jq -er .region infra/deployment.json)
+          account=$(jq -er '.oidc_role_arn | split(":")[4]' infra/deployment.json)
+          for stage in geometry cold pilot; do
+            variable=${stage^^}
+            definition=${!variable}
+            if [[ -z "$definition" ]]; then
+              definition=$(jq -r --arg stage "mhtgr-$stage" '.definitions[$stage] // ""' infra/deployment.json)
+            fi
+            prefix="arn:aws:batch:$region:$account:job-definition/block-mhtgr-$stage:"
+            revision=${definition#"$prefix"}
+            if [[ "$definition" != "$prefix"* || ! "$revision" =~ ^[1-9][0-9]*$ ]]; then
+              echo "::error::Supply an exact block-mhtgr-$stage revision ARN from the intended release."
+              exit 1
+            fi
+            echo "$stage=$definition" >> "$GITHUB_OUTPUT"
+            echo "$stage: \`$definition\`" >> "$GITHUB_STEP_SUMMARY"
+          done
+          echo 'Order: geometry → cold benchmark → depletion pilot. Production is never submitted. Each stage requires the preceding workflow to succeed, including its Batch numerical screen.' >> "$GITHUB_STEP_SUMMARY"
+  geometry:
+    needs: definitions
+    uses: ./.github/workflows/release-run.yml
+    with:
+      stage: mhtgr-geometry
+      job_definition_arn: ${{ needs.definitions.outputs.geometry }}
+  cold:
+    needs: [definitions, geometry]
+    uses: ./.github/workflows/release-run.yml
+    with:
+      stage: mhtgr-cold
+      job_definition_arn: ${{ needs.definitions.outputs.cold }}
+  pilot:
+    needs: [definitions, cold]
+    uses: ./.github/workflows/release-run.yml
+    with:
+      stage: mhtgr-pilot
+      job_definition_arn: ${{ needs.definitions.outputs.pilot }}

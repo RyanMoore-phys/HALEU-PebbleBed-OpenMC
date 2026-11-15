@@ -1,5 +1,13 @@
 name: Publish or submit block depletion
 on:
+  workflow_call:
+    inputs:
+      stage:
+        type: string
+        required: true
+      job_definition_arn:
+        type: string
+        required: true
   push:
     tags: ['v*']
   workflow_dispatch:

@@ -1,5 +1,33 @@
 # One exploratory depletion campaign with advisory comparison
 
+## Current 32-vCPU configuration
+
+The 128-vCPU quota was applied in us-east-1; the deployment stays in us-east-2,
+where the applied quota is 32. The old queued job
+`d7a3e36b-e3e5-4283-a6d1-a8f2d7e886f6` was cancelled before it started.
+Production revision `block-mhtgr-depletion:9` uses the existing v0.1.11 image,
+eight MPI nodes, four vCPUs/four OpenMP threads per node, and 28672 MiB per node.
+Nodes are pinned to `r7i.xlarge` (4 vCPUs, 32 GiB) to preserve memory. This is one
+multi-node job, not eight independent depletion calculations.
+
+Revision 9 is historical: it still uses 50,000 particles and a 24-hour timeout:
+
+```text
+arn:aws:batch:us-east-2:591859078128:job-definition/block-mhtgr-depletion:9
+```
+
+**Do not submit revision 9 for the current requested run.** Production is now
+configured locally for **25,000 particles per batch and a 48-hour timeout**.
+Publish a new image and register it using the instructions below; paste the new
+ARN into a new manual dispatch. The old deployment pin has been cleared to avoid
+silently submitting revision 9. Commit the registration-script and
+configuration changes to preserve this setup for future releases. Registering
+from the older v0.1.11 script would recreate the old 16-vCPU-per-node configuration.
+The compute environment update is recorded in `infra/compute-32vcpu-update.json`;
+it allows both the existing single-node instance type and the new production type,
+with a requested maximum of 32 vCPUs. Verify the environment is VALID with max 32
+before dispatch. No replacement job was automatically submitted.
+
 The user selected one full exploratory run instead of further controlled data
 comparisons. The two cold runs completed but failed agreement screens. Their
 results remain evidence of an unresolved discrepancy; changing workflow policy
@@ -65,17 +93,21 @@ for this policy change.
 
 ## Cost and limitations
 
-The existing production definition requests **eight nodes × 16 threads**, one
-MPI rank per node. It has a 24-hour attempt timeout, one attempt, and no implemented
+The current production definition requests **eight nodes × 4 threads**, one
+MPI rank per node. It has a 48-hour attempt timeout, one attempt, and no implemented
 restart. The schedule remains 125 depletion intervals, about 251 transport solves,
-at 50,000 particles and 250 batches per solve. Comparison runs at the end, not
+at 25,000 particles and 250 batches per solve (100 inactive). Comparison runs at the end, not
 after every step. A timeout before completion can therefore prevent the final
 comparison report; the advisory policy does not prevent computational failures.
 
 Skipping diagnostics avoids their costs but does not establish that production
 will finish within its timeout or cost less overall. The single-node cold runtime
-cannot reliably predict eight-node hot depletion performance. No particle counts,
-timesteps, timeouts, temperatures or libraries were changed in this policy update.
+cannot reliably predict eight-node hot depletion performance. Reducing total CPUs
+from 128 to 32 increases runtime risk; halving particles reduces transport work
+but does not guarantee completion within 48 hours or a lower total bill. Statistical
+uncertainty may increase. Timesteps, temperatures, data and screening limits remain
+unchanged. GitHub monitoring now has twelve five-hour windows (up to 60 hours),
+allowing some queue/startup time in addition to the Batch runtime allowance.
 Monitor AWS Batch during the run; cancelling GitHub monitoring alone does not
 terminate the Batch job. Check for an existing active job before any resubmission.
 

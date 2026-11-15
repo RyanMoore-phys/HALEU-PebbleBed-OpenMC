@@ -1,6 +1,6 @@
 {
   "benchmark": "OECD-NEA-MHTGR350-PhaseIII-1a-2a",
-  "particles": 50000,
+  "particles": 25000,
   "batches": 250,
   "inactive": 100,
   "transport_seed": 19,

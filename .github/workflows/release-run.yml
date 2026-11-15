@@ -110,43 +110,85 @@ jobs:
             echo "Benchmark agreement follows the case policy embedded in this image. Under advisory policy, Batch success means calculation, report generation and upload completed; inspect comparison.json for screening_pass/screening_fail. It does not establish validation." >> "$GITHUB_STEP_SUMMARY"
           fi
   monitor_1:
-    name: Watch Batch (1/6)
+    name: Watch Batch (1/12)
     needs: submit
     uses: ./.github/workflows/watch-batch.yml
     with:
       job_id: ${{ needs.submit.outputs.job_id }}
   monitor_2:
-    name: Watch Batch (2/6)
+    name: Watch Batch (2/12)
     needs: [submit, monitor_1]
     if: needs.monitor_1.outputs.pending == 'true'
     uses: ./.github/workflows/watch-batch.yml
     with:
       job_id: ${{ needs.submit.outputs.job_id }}
   monitor_3:
-    name: Watch Batch (3/6)
+    name: Watch Batch (3/12)
     needs: [submit, monitor_2]
     if: needs.monitor_2.outputs.pending == 'true'
     uses: ./.github/workflows/watch-batch.yml
     with:
       job_id: ${{ needs.submit.outputs.job_id }}
   monitor_4:
-    name: Watch Batch (4/6)
+    name: Watch Batch (4/12)
     needs: [submit, monitor_3]
     if: needs.monitor_3.outputs.pending == 'true'
     uses: ./.github/workflows/watch-batch.yml
     with:
       job_id: ${{ needs.submit.outputs.job_id }}
   monitor_5:
-    name: Watch Batch (5/6)
+    name: Watch Batch (5/12)
     needs: [submit, monitor_4]
     if: needs.monitor_4.outputs.pending == 'true'
     uses: ./.github/workflows/watch-batch.yml
     with:
       job_id: ${{ needs.submit.outputs.job_id }}
   monitor_6:
-    name: Watch Batch (6/6)
+    name: Watch Batch (6/12)
     needs: [submit, monitor_5]
     if: needs.monitor_5.outputs.pending == 'true'
+    uses: ./.github/workflows/watch-batch.yml
+    with:
+      job_id: ${{ needs.submit.outputs.job_id }}
+  monitor_7:
+    name: Watch Batch (7/12)
+    needs: [submit, monitor_6]
+    if: needs.monitor_6.outputs.pending == 'true'
+    uses: ./.github/workflows/watch-batch.yml
+    with:
+      job_id: ${{ needs.submit.outputs.job_id }}
+  monitor_8:
+    name: Watch Batch (8/12)
+    needs: [submit, monitor_7]
+    if: needs.monitor_7.outputs.pending == 'true'
+    uses: ./.github/workflows/watch-batch.yml
+    with:
+      job_id: ${{ needs.submit.outputs.job_id }}
+  monitor_9:
+    name: Watch Batch (9/12)
+    needs: [submit, monitor_8]
+    if: needs.monitor_8.outputs.pending == 'true'
+    uses: ./.github/workflows/watch-batch.yml
+    with:
+      job_id: ${{ needs.submit.outputs.job_id }}
+  monitor_10:
+    name: Watch Batch (10/12)
+    needs: [submit, monitor_9]
+    if: needs.monitor_9.outputs.pending == 'true'
+    uses: ./.github/workflows/watch-batch.yml
+    with:
+      job_id: ${{ needs.submit.outputs.job_id }}
+  monitor_11:
+    name: Watch Batch (11/12)
+    needs: [submit, monitor_10]
+    if: needs.monitor_10.outputs.pending == 'true'
+    uses: ./.github/workflows/watch-batch.yml
+    with:
+      job_id: ${{ needs.submit.outputs.job_id }}
+  monitor_12:
+    name: Watch Batch (12/12)
+    needs: [submit, monitor_11]
+    if: needs.monitor_11.outputs.pending == 'true'
     uses: ./.github/workflows/watch-batch.yml
     with:
       job_id: ${{ needs.submit.outputs.job_id }}

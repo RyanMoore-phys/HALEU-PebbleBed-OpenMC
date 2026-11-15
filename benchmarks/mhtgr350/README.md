@@ -100,10 +100,11 @@ CE/CM integration resolves early burnup at 0.01, 0.05, 0.1, 0.2 and 0.5 MWd/kgHM
 then uses increments no larger than 1 MWd/kgHM. The full case has 125 intervals
 and approximately 251 transport solves; it is substantially larger than the old
 smoke case. Halve the maximum interval and compare before accepting timestep
-convergence. There is no measured runtime estimate yet. The full job has a 24-hour
+convergence. There is no measured runtime estimate yet. The full job has a 48-hour
 timeout and no implemented restart; use the pilot to assess cost first.
 
-Cases currently use 50,000 particles, 250 batches and 100 inactive batches. These
+Cold and pilot cases use 50,000 particles; production uses 25,000 particles.
+All three use 250 batches and 100 inactive batches. These
 are starting settings, not a claim of source convergence. The cold report includes
 an entropy/generation-k plot. Repeat with more inactive batches and independent
 transport seeds, examining source convergence as well as the reported uncertainty.
@@ -154,7 +155,7 @@ initial screens are looser than the specification's convergence recommendation.
    both initial and final values to Table 11. Use elapsed time and file sizes to
    estimate the full campaign; don't scale the old smoke time blindly.
 7. For the user-selected exploratory campaign, directly dispatch **mhtgr-depletion**:
-   eight nodes, one MPI rank and 16 OpenMP threads per node. Full reference
+   eight nodes, one MPI rank and 4 OpenMP threads per node (32 vCPUs total). Full reference
    comparison runs automatically at completion. Skipping the preceding studies
    leaves their scientific and runtime uncertainties unresolved.
 

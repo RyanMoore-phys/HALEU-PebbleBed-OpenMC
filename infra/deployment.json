@@ -5,6 +5,7 @@
   "oidc_role_arn": "arn:aws:iam::591859078128:role/GithubOIDC",
   "queue": "block-queue",
   "definitions": {
+    "mhtgr-depletion": "",
     "mpi-check": "arn:aws:batch:us-east-2:591859078128:job-definition/block-mpi-check:3",
     "seed": "arn:aws:batch:us-east-2:591859078128:job-definition/block-seed:1",
     "geometry": "arn:aws:batch:us-east-2:591859078128:job-definition/block-geometry:1",

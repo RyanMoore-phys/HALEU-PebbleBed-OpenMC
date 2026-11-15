@@ -1,0 +1,8 @@
+{
+  "computeEnvironment": "block-compute",
+  "computeResources": {
+    "minvCpus": 0,
+    "maxvCpus": 32,
+    "instanceTypes": ["c7i.4xlarge", "r7i.xlarge"]
+  }
+}

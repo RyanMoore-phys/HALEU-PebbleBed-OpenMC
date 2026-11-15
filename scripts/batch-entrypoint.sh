@@ -111,7 +111,7 @@ EOF
         echo "Expected $nodes distinct MPI hosts in hostfile" >&2
         exit 1
     fi
-    # One rank owns each node. OpenMP binds its 16 threads to hardware threads.
+    # One rank owns each node. OpenMP binds the configured threads to hardware threads.
     export OMP_PLACES=threads OMP_PROC_BIND=spread
     # Restrict MPI payload traffic to the task ENIs, excluding ECS local interfaces.
     # This CIDR matches the deployed Batch subnet; override if that subnet changes.
